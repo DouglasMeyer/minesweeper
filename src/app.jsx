@@ -1,21 +1,23 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 import Field from './field.jsx';
+import { reveal, flag, unflag } from './actions';
 
-function newCell(){
-  return {
-    mine: Math.random() > 0.5,
-    revealed: Math.random() > 0.5,
-    flagged: Math.random() > 0.5
-  };
+export default function App({ field, onReveal, onFlag, onUnflag }){
+  return <Field
+    rows={ field }
+    onReveal={ onReveal }
+    onFlag={ onFlag }
+    onUnflag={ onUnflag }
+  ></Field>
 }
-export default function App({}){
-  const rows = [
-    [newCell(),newCell(),newCell(),newCell(),newCell()],
-    [newCell(),newCell(),newCell(),newCell(),newCell()],
-    [newCell(),newCell(),newCell(),newCell(),newCell()],
-    [newCell(),newCell(),newCell(),newCell(),newCell()],
-    [newCell(),newCell(),newCell(),newCell(),newCell()]
-  ];
-  return <Field rows={ rows }></Field>
-}
+
+export default connect(
+  state =>{ return { field: state.field }; },
+  dispatch =>{ return {
+    onReveal: (y,x)=> dispatch(reveal(x,y)),
+    onFlag: (y,x)=> dispatch(flag(x,y)),
+    onUnflag: (y,x)=> dispatch(unflag(x,y)),
+  }; }
+)(App);
