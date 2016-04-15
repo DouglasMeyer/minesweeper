@@ -2,15 +2,19 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import Field from './field.jsx';
+import FieldStatus from './field_status.jsx';
 import { reveal, flag, unflag } from './actions';
 
 export default function App({ field, onReveal, onFlag, onUnflag }){
-  return <Field
-    rows={ field }
-    onReveal={ onReveal }
-    onFlag={ onFlag }
-    onUnflag={ onUnflag }
-  ></Field>
+  return <div>
+    <FieldStatus field={ field }></FieldStatus>
+    <Field
+      rows={ field }
+      onReveal={ onReveal }
+      onFlag={ onFlag }
+      onUnflag={ onUnflag }
+    ></Field>
+  </div>;
 }
 
 export default connect(
