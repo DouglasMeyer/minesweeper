@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <style>
+      * { box-sizing: border-box; }
+      .cell {
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 2rem;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid #AAA;
+        background: linear-gradient(#E3E3E3, #FFF);
+      }
+      a.cell { cursor: pointer; }
+      .cell--revealed {
+        border: none;
+        background: none;
+      }
+      .cell--flag:after {
+        content: "!";
+      }
+      .cell--mine:after {
+        content: "#";
+        font-size: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
