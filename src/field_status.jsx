@@ -5,7 +5,7 @@ function FieldStatus({ field }){
       flagCount = 0;
   field.forEach((row)=>{
     row.forEach((cell)=>{
-      if (cell.mine) mineCount += 1;
+      if (cell.mine && !cell.revealed) mineCount += 1;
       if (cell.flagged) flagCount += 1;
     });
   });

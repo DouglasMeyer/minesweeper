@@ -6,10 +6,24 @@ function newCell(){
 const size = 20;
 const initialField = []
 for (let y=0; y<size; y++){
-  let row = [];
+  const row = [];
   initialField.push(row);
   for (let x=0; x<size; x++){
     row.push(newCell());
+  }
+}
+for (let y=0; y<size; y++){
+  let row = initialField[y];
+  for (let x=0; x<size; x++){
+    let currentCell = row[x];
+    currentCell.neighboringMineCount = 0;
+    initialField.forEach((row, rowIndex)=>{
+      if (Math.abs(y - rowIndex) > 1) return;
+      row.forEach((cell, cellIndex)=>{
+        if (Math.abs(x - cellIndex) > 1) return;
+        if (cell.mine) currentCell.neighboringMineCount += 1;
+      });
+    });
   }
 }
 function updateCell(field, x, y, props){
@@ -29,32 +43,10 @@ function revealCell(field, x, y){
   if (!field[y] || !field[y][x]) return field;
   if (field[y][x].revealed) return field;
 
-  let neighboringMineCount = 0;
-  field.forEach((row, rowIndex)=>{
-    if (Math.abs(y - rowIndex) > 1) return;
-    row.forEach((cell, cellIndex)=>{
-      if (Math.abs(x - cellIndex) > 1) return;
-      if (cell.mine) neighboringMineCount += 1;
-    });
-  });
-
-  let newField = updateCell(field, x, y, {
+  return updateCell(field, x, y, {
     revealed: true,
-    neighboringMineCount: neighboringMineCount
+    flagged: false
   });
-  if (neighboringMineCount === 0){
-    return [
-      { dx: -1, dy: -1 },
-      { dx:  0, dy: -1 },
-      { dx:  1, dy: -1 },
-      { dx: -1, dy:  0 },
-      { dx:  1, dy:  0 },
-      { dx: -1, dy:  1 },
-      { dx:  0, dy:  1 },
-      { dx:  1, dy:  1 },
-    ].reduce((field, {dx,dy})=> revealCell(field, x+dx, y+dy), newField);
-  }
-  return newField;
 }
 export default function field(field=initialField, action){
   switch (action.type){

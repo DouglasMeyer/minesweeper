@@ -3,6 +3,7 @@
     <style>
       * { box-sizing: border-box; }
       .cell {
+        position: relative;
         display: inline-block;
         vertical-align: middle;
         text-align: center;
@@ -14,14 +15,36 @@
       }
       a.cell { cursor: pointer; }
       .cell--revealed {
-        border: none;
+        border: 1px solid #EEE;
         background: none;
       }
       .cell--flag:after {
-        content: "!";
+        content: "\2691";
+        font-size: 2rem;
       }
-      .cell--mine:after {
-        content: "#";
+      .cell--mine.cell--revealed:after {
+        position: absolute;
+        top: 0; left: 0;
+        content: "\2601";
+        font-size: 2rem;
+        animation: 0.5s explode;
+        color: #888;
+        opacity: 0;
+      }
+      @keyframes explode {
+        from {
+          transform: scale(0.8);
+          opacity: 0.8;
+        }
+        to {
+          transform: scale(3);
+          opacity: 0;
+        }
+      }
+      .cell--mine:before {
+        position: absolute;
+        top: 0; left: 0;
+        content: "\1f4a3";
         font-size: 2rem;
       }
     </style>
