@@ -29,39 +29,35 @@ Cell.propTypes = {
   onUnflag: PropTypes.func.isRequired
 };
 
-function Row({ cells, onReveal, onFlag, onUnflag }){
-  return <div>{ cells.map((cell,ci) =>
-    <Cell key={ci}
-      {...cell}
-      onReveal={ onReveal.bind(null, ci) }
-      onFlag={ onFlag.bind(null, ci) }
-      onUnflag={ onUnflag.bind(null, ci) }
-    ></Cell>
-  )}</div>;
+function Field({ cells, onReveal, onFlag, onUnflag }){
+  const size = 20, //FIXME: magic number
+        cellsInRows = cells.reduce((cellsInRows, cell, index)=>{
+          if (index % size === 0) cellsInRows.push([]);
+          cellsInRows[cellsInRows.length-1].push(cell);
+          return cellsInRows;
+        }, []);
+
+  return <div>
+    { cellsInRows.map((row, ri) =>
+      <div key={`row-${ri}`}>
+        { row.map((cell, ci) =>
+          <Cell key={`cell-${ri},${ci}`}
+            {...cell}
+            onReveal={ onReveal.bind(null, ri*size+ci) }
+            onFlag={ onFlag.bind(null, ri*size+ci) }
+            onUnflag={ onUnflag.bind(null, ri*size+ci) }
+          ></Cell>
+        )}
+      </div>
+    )}
+  </div>;
 }
-Row.propTypes = {
+Field.propTypes = {
   cells: PropTypes.arrayOf(PropTypes.shape({
-    mine: PropTypes.bool,
+    mine: PropTypes.bool.isRequired,
     revealed: PropTypes.bool,
     flagged: PropTypes.bool
   }).isRequired).isRequired,
-  onReveal: PropTypes.func.isRequired,
-  onFlag: PropTypes.func.isRequired,
-  onUnflag: PropTypes.func.isRequired
-};
-
-function Field({ rows, onReveal, onFlag, onUnflag }){
-  return <div>{ rows.map((cells,ri) =>
-    <Row key={ri}
-      cells={cells}
-      onReveal={ onReveal.bind(null, ri) }
-      onFlag={ onFlag.bind(null, ri) }
-      onUnflag={ onUnflag.bind(null, ri) }
-    ></Row>
-  )}</div>;
-}
-Field.propTypes = {
-  rows: PropTypes.array.isRequired,
   onReveal: PropTypes.func.isRequired,
   onFlag: PropTypes.func.isRequired,
   onUnflag: PropTypes.func.isRequired

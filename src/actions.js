@@ -1,3 +1,5 @@
+import { neighborIndexes } from './helpers';
+
 /*
  * action types
  */
@@ -10,41 +12,37 @@ export const UNFLAG = 'UNFLAG';
  * action creators
  */
 
-export function reveal(x,y){
+export function reveal(...indexes){
   return (dispatch, getState)=>{
     const field = getState().field,
-          cell = field[y] && field[y][x];
-    if (!cell || cell.revealed) return;
-    dispatch({ type: REVEAL, x, y });
+          size = 20, //FIXME: magic number
+          unrevealedIndexes = indexes.filter(i=> !field[i].revealed);
+    if (unrevealedIndexes.length === 0) return;
+    dispatch({ type: REVEAL, indexes: unrevealedIndexes });
 
-    if (cell.mine || cell.neighboringMineCount === 0) {
-      const cellsToReveal = [
-          { dx: -1, dy: -1 },
-          { dx:  0, dy: -1 },
-          { dx:  1, dy: -1 },
-          { dx: -1, dy:  0 },
-          { dx:  1, dy:  0 },
-          { dx: -1, dy:  1 },
-          { dx:  0, dy:  1 },
-          { dx:  1, dy:  1 }
-        ].map(({dx,dy})=>({ x: x+dx, y: y+dy }))
-        .filter(({x,y})=> field[y] && field[y][x] && !field[y][x].revealed);
-      if (cellsToReveal.length){
-        requestAnimationFrame(()=>{
-          cellsToReveal
-          .forEach(({x,y})=>{
-            dispatch(reveal(x,y));
-          });
-        });
-      }
+    const cellsToReveal = unrevealedIndexes.reduce((cells, index)=>{
+              const cell = field[index];
+              if (!cell.mine && cell.neighboringMineCount) return cells;
+              return cells.concat(
+                neighborIndexes(size, index).filter(i=> !field[i].revealed)
+              );
+            }, [])
+            .reduce((acc,i)=>{
+              if (acc.indexOf(i) !== -1) return acc;
+              return [ ...acc, i ];
+            }, []);
+    if (cellsToReveal.length){
+      requestAnimationFrame(()=>{
+        dispatch(reveal(...cellsToReveal));
+      });
     }
   }
 }
 
-export function flag(x,y){
-  return { type: FLAG, x, y };
+export function flag(index){
+  return { type: FLAG, index };
 }
 
-export function unflag(x,y){
-  return { type: UNFLAG, x, y };
+export function unflag(index){
+  return { type: UNFLAG, index };
 }

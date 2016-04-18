@@ -9,7 +9,7 @@ export default function App({ field, onReveal, onFlag, onUnflag }){
   return <div>
     <FieldStatus field={ field }></FieldStatus>
     <Field
-      rows={ field }
+      cells={ field }
       onReveal={ onReveal }
       onFlag={ onFlag }
       onUnflag={ onUnflag }
@@ -20,8 +20,8 @@ export default function App({ field, onReveal, onFlag, onUnflag }){
 export default connect(
   state =>{ return { field: state.field }; },
   dispatch =>{ return {
-    onReveal: (y,x)=> dispatch(reveal(x,y)),
-    onFlag: (y,x)=> dispatch(flag(x,y)),
-    onUnflag: (y,x)=> dispatch(unflag(x,y)),
+    onReveal: i=> dispatch(reveal(i)),
+    onFlag: i=> dispatch(flag(i)),
+    onUnflag: i=> dispatch(unflag(i)),
   }; }
 )(App);
