@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 
-function FieldStatus({ field }){
+function FieldStatus({ field, position }){
   let mineCount = 0,
       flagCount = 0;
   field.forEach(cell=>{
@@ -10,6 +10,7 @@ function FieldStatus({ field }){
   const flagsLeft = mineCount - flagCount;
   return <div>
     Flags left for area: { flagsLeft }
+    { position.x }, { position.y }
   </div>;
 }
 FieldStatus.propTypes = {
