@@ -1,15 +1,16 @@
-var watchify = require('watchify'),
-    browserify = require('browserify'),
-    gulp = require('gulp'),
-    source = require('vinyl-source-stream'),
-    buffer = require('vinyl-buffer'),
-    gutil = require('gulp-util'),
-    sourcemaps = require('gulp-sourcemaps'),
-    assign = require('lodash.assign'),
-    rename = require('gulp-rename'),
+var assign = require('lodash.assign'),
     babelify = require('babelify'),
+    browserify = require('browserify'),
+    buffer = require('vinyl-buffer'),
+    exit = require('gulp-exit'),
+    gulp = require('gulp'),
+    gutil = require('gulp-util'),
+    notify = require('gulp-notify'),
+    rename = require('gulp-rename'),
+    source = require('vinyl-source-stream'),
+    sourcemaps = require('gulp-sourcemaps'),
     uglify = require('gulp-uglify'),
-    exit = require('gulp-exit');
+    watchify = require('watchify');
 
 // add custom browserify options here
 var customOpts = {
@@ -28,6 +29,7 @@ function bundle() {
   return b.bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+    .on('error', notify.onError())
     .pipe(source('./src/app.js'))
     // optional, remove if you don't need to buffer file contents
     .pipe(buffer())
