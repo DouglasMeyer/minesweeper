@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDom from 'react-dom';
 import { connect } from 'react-redux';
 
 import Field from './field.jsx';
@@ -7,9 +8,9 @@ import { reveal, flag, unflag } from './actions';
 
 export default function App({ field, onReveal, onFlag, onUnflag }){
   return <div>
-    <FieldStatus field={ field }></FieldStatus>
+    <FieldStatus field={ field.cells }></FieldStatus>
     <Field
-      cells={ field }
+      {...field}
       onReveal={ onReveal }
       onFlag={ onFlag }
       onUnflag={ onUnflag }

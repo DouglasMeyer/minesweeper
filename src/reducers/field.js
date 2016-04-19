@@ -2,53 +2,58 @@ import { neighborIndexes } from '../helpers';
 import { REVEAL, FLAG, UNFLAG } from '../actions';
 
 function newCell(){
-  return { mine: Math.random() < 0.1 };
+  return { mine: Math.random() < 0.2 };
 }
-const size = 20;
-const initialField = []
-for (let i=0; i<size*size; i++){
-  initialField.push(newCell());
+const defaultState = {
+  size: 30,
+  cells: []
+};
+for (let i=0; i<defaultState.size*defaultState.size; i++){
+  defaultState.cells.push(newCell());
 }
-for (let i=0; i<size*size; i++){
-  let cell = initialField[i];
+for (let i=0; i<defaultState.size*defaultState.size; i++){
+  let cell = defaultState.cells[i];
   cell.neighboringMineCount =
-    neighborIndexes(size, i)
+    neighborIndexes(defaultState.size, i)
     .reduce((count, neighborIndex)=>{
-      return count + (initialField[neighborIndex].mine ? 1 : 0);
+      return count + (defaultState.cells[neighborIndex].mine ? 1 : 0);
     }, 0);
 }
-function updateCell(field, i, props){
-  return [
-    ...field.slice(0, i),
-    Object.assign({}, field[i], props),
-    ...field.slice(i+1)
-  ];
+function updateCell(state, i, props){
+  return {
+    size: state.size,
+    cells: [
+      ...state.cells.slice(0, i),
+      Object.assign({}, state.cells[i], props),
+      ...state.cells.slice(i+1)
+    ]
+  };
 }
-function revealCells(field, indexes){
-  return indexes.reduce((newField, index)=>{
-    if (newField[index].revealed) return newField;
-    return updateCell(newField, index, {
+function revealCells(state, indexes){
+  return indexes.reduce((newState, index)=>{
+    if (newState.cells[index].revealed) return newState;
+    return updateCell(newState, index, {
       revealed: true,
       flagged: false
     });
-  }, field);
+  }, state);
 }
-export default function field(field=initialField, action){
+export default function field(state=defaultState, action){
   switch (action.type){
     case REVEAL:
-      return revealCells(field, action.indexes);
+      return revealCells(state, action.indexes);
 
     case FLAG:
-      return updateCell(field, action.index, {
+      return updateCell(state, action.index, {
         flagged: true
       });
 
     case UNFLAG:
-      return updateCell(field, action.index, {
+      return updateCell(state, action.index, {
         flagged: false
       });
 
     default:
-      return field;
+      return state;
   }
 }

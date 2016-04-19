@@ -29,9 +29,8 @@ Cell.propTypes = {
   onUnflag: PropTypes.func.isRequired
 };
 
-function Field({ cells, onReveal, onFlag, onUnflag }){
-  const size = 20, //FIXME: magic number
-        cellsInRows = cells.reduce((cellsInRows, cell, index)=>{
+function Field({ cells, size, onReveal, onFlag, onUnflag }){
+  const cellsInRows = cells.reduce((cellsInRows, cell, index)=>{
           if (index % size === 0) cellsInRows.push([]);
           cellsInRows[cellsInRows.length-1].push(cell);
           return cellsInRows;
@@ -58,6 +57,7 @@ Field.propTypes = {
     revealed: PropTypes.bool,
     flagged: PropTypes.bool
   }).isRequired).isRequired,
+  size: PropTypes.number.isRequired,
   onReveal: PropTypes.func.isRequired,
   onFlag: PropTypes.func.isRequired,
   onUnflag: PropTypes.func.isRequired
