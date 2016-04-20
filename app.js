@@ -21137,7 +21137,7 @@ function newCell() {
   return { mine: Math.random() < 0.2 };
 }
 var defaultState = {
-  size: 30,
+  size: 20,
   cells: []
 };
 for (var i = 0; i < defaultState.size * defaultState.size; i++) {
