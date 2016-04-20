@@ -5,7 +5,7 @@ function newCell(){
   return { mine: Math.random() < 0.2 };
 }
 const defaultState = {
-  size: 30,
+  size: 20,
   cells: []
 };
 for (let i=0; i<defaultState.size*defaultState.size; i++){
