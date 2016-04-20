@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <style>
+      * { box-sizing: border-box; }
+      .cell {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 2rem;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid #AAA;
+        background: linear-gradient(#E3E3E3, #FFF);
+      }
+      a.cell { cursor: pointer; }
+      .cell--revealed {
+        border: 1px solid #EEE;
+        background: none;
+      }
+      .cell--flag:after {
+        content: "\2691";
+        font-size: 2rem;
+      }
+      .cell--mine.cell--revealed:after {
+        position: absolute;
+        top: 0; left: 0;
+        content: "\2601";
+        font-size: 2rem;
+        animation: 0.5s explode;
+        color: #888;
+        opacity: 0;
+      }
+      @keyframes explode {
+        from {
+          transform: scale(0.8);
+          opacity: 0.8;
+        }
+        to {
+          transform: scale(3);
+          opacity: 0;
+        }
+      }
+      .cell--mine:before {
+        position: absolute;
+        top: 0; left: 0;
+        content: "\1f4a3";
+        font-size: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
