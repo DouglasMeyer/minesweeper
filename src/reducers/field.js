@@ -8,14 +8,14 @@ const defaultState = {
   size: 20,
   cells: []
 };
-for (let i=0; i<defaultState.size*defaultState.size; i++){
+for (let i = 0; i < defaultState.size * defaultState.size; i++){
   defaultState.cells.push(newCell());
 }
-for (let i=0; i<defaultState.size*defaultState.size; i++){
+for (let i = 0; i < defaultState.size * defaultState.size; i++){
   let cell = defaultState.cells[i];
   cell.neighboringMineCount =
     neighborIndexes(defaultState.size, i)
-    .reduce((count, neighborIndex)=>{
+    .reduce((count, neighborIndex) => {
       return count + (defaultState.cells[neighborIndex].mine ? 1 : 0);
     }, 0);
 }
@@ -25,12 +25,12 @@ function updateCell(state, i, props){
     cells: [
       ...state.cells.slice(0, i),
       Object.assign({}, state.cells[i], props),
-      ...state.cells.slice(i+1)
+      ...state.cells.slice(i + 1)
     ]
   };
 }
 function revealCells(state, indexes){
-  return indexes.reduce((newState, index)=>{
+  return indexes.reduce((newState, index) => {
     if (newState.cells[index].revealed) return newState;
     return updateCell(newState, index, {
       revealed: true,
@@ -38,7 +38,7 @@ function revealCells(state, indexes){
     });
   }, state);
 }
-export default function field(state=defaultState, action){
+export default function field(state = defaultState, action){
   switch (action.type){
     case REVEAL:
       return revealCells(state, action.indexes);
