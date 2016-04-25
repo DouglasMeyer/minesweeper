@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
 
-import field from './field';
+import fields from './fields';
 import tracking from './tracking';
 
 export default combineReducers({
-  field, tracking
+  fields, tracking
 });

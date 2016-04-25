@@ -3,7 +3,7 @@ import { MOVE } from '../actions';
 const defaultState = {
   position: { x: 0, y: 0 }
 };
-export default function tracking(state=defaultState, action){
+export default function tracking(state = defaultState, action){
   switch (action.type){
     case MOVE:
       return Object.assign({}, state, {

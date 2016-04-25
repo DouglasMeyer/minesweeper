@@ -8,21 +8,21 @@ class Cell extends Component {
   }
 
   render(){
-    const { mine, revealed, flagged, neighboringMineCount, onReveal, onFlag, onUnflag } = this.props;
+    const { x, y, mine, revealed, flagged, neighboringMineCount, onReveal, onFlag, onUnflag } = this.props;
     if (flagged) {
       return <span className='cell cell--flag'
         onContextMenu={e => {
           e.preventDefault();
-          onUnflag();
+          onUnflag({ x, y });
         }}
       ></span>;
     }
     if (!revealed) {
       return <a className='cell'
-        onClick={onReveal}
+        onClick={ () => onReveal({ x, y }) }
         onContextMenu={e => {
           e.preventDefault();
-          onFlag();
+          onFlag({ x, y });
         }}
       ></a>;
     }
@@ -40,55 +40,36 @@ Cell.propTypes = {
   onUnflag: PropTypes.func.isRequired
 };
 
-class Field extends Component {
-  constructor(props){
-    super(props);
-    this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
-    this.onRevealMap = new WeakMap();
-    this.onFlagMap = new WeakMap();
-    this.onUnflagMap = new WeakMap();
-  }
+function Field({ cells, position, size, onReveal, onFlag, onUnflag }){
+  const cellsInRows = cells.reduce((cellsInRows, cell, index) => {
+    if (index % size === 0) cellsInRows.push([]);
+    cellsInRows[cellsInRows.length - 1].push(cell);
+    return cellsInRows;
+  }, []);
 
-  render(){
-    const { cells, size, onReveal, onFlag, onUnflag } = this.props;
-    const cellsInRows = cells.reduce((cellsInRows, cell, index) => {
-      if (index % size === 0) cellsInRows.push([]);
-      cellsInRows[cellsInRows.length - 1].push(cell);
-      return cellsInRows;
-    }, []);
-
-    return <div
-      style={{
-        // position: 'absolute',
-        whiteSpace: 'nowrap'
-      }}
-    >
-      { cellsInRows.map((row, ri) =>
-        <div key={`row-${ri}`}>
-          { row.map((cell, ci) => {
-            if (!this.onRevealMap.has(cell)){
-              this.onRevealMap.set(cell, onReveal.bind(null, ri * size + ci));
-            }
-            const onRevealCell = this.onRevealMap.get(cell);
-            if (!this.onFlagMap.has(cell)){
-              this.onFlagMap.set(cell, onFlag.bind(null, ri * size + ci));
-            }
-            const onFlagCell = this.onFlagMap.get(cell);
-            if (!this.onUnflagMap.has(cell)){
-              this.onUnflagMap.set(cell, onUnflag.bind(null, ri * size + ci));
-            }
-            const onUnflagCell = this.onUnflagMap.get(cell);
-            return <Cell key={`cell-${ri},${ci}`}
-              {...cell}
-              onReveal={ onRevealCell }
-              onFlag={ onFlagCell }
-              onUnflag={ onUnflagCell }
-            ></Cell>;
-          })}
-        </div>
-      )}
-    </div>;
-  }
+  return <div
+    style={{
+      position: 'absolute',
+      whiteSpace: 'nowrap',
+      top: position.y * size * 16 * 2,
+      left: position.x * size * 16 * 2
+    }}
+  >
+    { cellsInRows.map((row, y) =>
+      <div key={`row-${y}`}>
+        { row.map((cell, x) =>
+          <Cell key={`cell-${x},${y}`}
+            {...cell}
+            x={ position.x * size + x }
+            y={ position.y * size + y }
+            onReveal={ onReveal }
+            onFlag={ onFlag }
+            onUnflag={ onUnflag }
+          ></Cell>
+        )}
+      </div>
+    )}
+  </div>;
 }
 Field.propTypes = {
   cells: PropTypes.arrayOf(PropTypes.shape({

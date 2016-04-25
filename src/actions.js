@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { neighborIndexes } from './helpers';
+import { nineSquare } from './helpers';
 
 /*
  * action types
@@ -14,28 +14,45 @@ export const MOVE = 'MOVE';
  * action creators
  */
 
-export function reveal(...indexes){
+const fieldSize = 10; // FIXME: Magic number
+
+function cellAt(fields, x, y){
+  const fx = Math.floor(x / fieldSize);
+  const fy = Math.floor(y / fieldSize);
+  const field = fields.find(field => {
+    return field.position.x === fx && field.position.y === fy;
+  });
+  if (!field) return;
+  return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
+}
+
+export function reveal(...positions){
   return (dispatch, getState) => {
     requestAnimationFrame(() => {
-      const { cells, size } = getState().field;
-      const unrevealedIndexes = indexes.filter(i => !cells[i].revealed);
-      if (unrevealedIndexes.length === 0) return;
-      dispatch({ type: REVEAL, indexes: unrevealedIndexes });
+      const fields = getState().fields;
+      const unrevealedPositions = positions.filter(p => {
+        const cell = cellAt(fields, p.x, p.y);
+        return cell && !cell.revealed;
+      });
+      if (unrevealedPositions.length === 0) return;
+      dispatch({ type: REVEAL, positions: unrevealedPositions });
 
-      const cellsToReveal = unrevealedIndexes.reduce((cellsToReveal, index) => {
-        const cell = cells[index];
-        if (!cell.mine && cell.neighboringMineCount) return cellsToReveal;
-        return cellsToReveal.concat(
-          neighborIndexes(size, index).filter(i => !cells[i].revealed)
+      const positionsToReveal = unrevealedPositions.reduce((positionsToReveal, pos) => {
+        const cell = cellAt(fields, pos.x, pos.y);
+        if (!cell.mine && cell.neighboringMineCount) return positionsToReveal;
+        return positionsToReveal.concat(
+          nineSquare.map(d => ({ x: pos.x + d.x, y: pos.y + d.y }))
         );
       }, [])
-      .reduce((acc, i) => {
-        if (acc.indexOf(i) !== -1) return acc;
-        return [ ...acc, i ];
+      .reduce((acc, pos) => {
+        if (acc.indexOf(pos) !== -1) return acc;
+        const cell = cellAt(fields, pos.x, pos.y);
+        if (!cell || cell.revealed) return acc;
+        return [ ...acc, pos ];
       }, []);
-      if (cellsToReveal.length){
+      if (positionsToReveal.length){
         requestAnimationFrame(() => {
-          dispatch(reveal(...cellsToReveal));
+          dispatch(reveal(...positionsToReveal));
         });
       }
     });
