@@ -21,3 +21,6 @@ render((
   ),
   document.getElementById('container')
 );
+
+document.body.scrollTop = 0;
+document.body.scrollLeft = 0;

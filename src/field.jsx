@@ -40,36 +40,46 @@ Cell.propTypes = {
   onUnflag: PropTypes.func.isRequired
 };
 
-function Field({ cells, position, size, onReveal, onFlag, onUnflag }){
-  const cellsInRows = cells.reduce((cellsInRows, cell, index) => {
-    if (index % size === 0) cellsInRows.push([]);
-    cellsInRows[cellsInRows.length - 1].push(cell);
-    return cellsInRows;
-  }, []);
+class Field extends Component {
+  constructor(props){
+    super(props);
+    this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
+  }
 
-  return <div
-    style={{
-      position: 'absolute',
-      whiteSpace: 'nowrap',
-      top: position.y * size * 16 * 2,
-      left: position.x * size * 16 * 2
-    }}
-  >
-    { cellsInRows.map((row, y) =>
-      <div key={`row-${y}`}>
-        { row.map((cell, x) =>
-          <Cell key={`cell-${x},${y}`}
-            {...cell}
-            x={ position.x * size + x }
-            y={ position.y * size + y }
-            onReveal={ onReveal }
-            onFlag={ onFlag }
-            onUnflag={ onUnflag }
-          ></Cell>
-        )}
-      </div>
-    )}
-  </div>;
+  render(){
+    const { cells, position, size, onReveal, onFlag, onUnflag } = this.props;
+    console.log('field render');
+    const cellsInRows = cells.reduce((cellsInRows, cell, index) => {
+      if (index % size === 0) cellsInRows.push([]);
+      cellsInRows[cellsInRows.length - 1].push(cell);
+      return cellsInRows;
+    }, []);
+
+    return <div
+      className='field'
+      style={{
+        position: 'absolute',
+        whiteSpace: 'nowrap',
+        top: position.y * size * 16 * 2,
+        left: position.x * size * 16 * 2
+      }}
+    >
+      { cellsInRows.map((row, y) =>
+        <div key={`row-${y}`}>
+          { row.map((cell, x) =>
+            <Cell key={`cell-${x},${y}`}
+              {...cell}
+              x={ position.x * size + x }
+              y={ position.y * size + y }
+              onReveal={ onReveal }
+              onFlag={ onFlag }
+              onUnflag={ onUnflag }
+            ></Cell>
+          )}
+        </div>
+      )}
+    </div>;
+  }
 }
 Field.propTypes = {
   cells: PropTypes.arrayOf(PropTypes.shape({
