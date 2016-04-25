@@ -59,12 +59,12 @@ export function reveal(...positions){
   };
 }
 
-export function flag(index){
-  return { type: FLAG, index };
+export function flag(position){
+  return { type: FLAG, positions: [ position ] };
 }
 
-export function unflag(index){
-  return { type: UNFLAG, index };
+export function unflag(position){
+  return { type: UNFLAG, positions: [ position ] };
 }
 
 const keyMap = {

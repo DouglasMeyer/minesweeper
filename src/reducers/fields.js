@@ -56,50 +56,7 @@ function ensureFieldWithNeighbors(field, fields){
 }
 
 function defaultState(){
-  return nineSquare
-  .map(p => fieldReducer(undefined, { x: p.x * frameSize, y: p.y * frameSize }))
-  .map((field, _fieldIndex, fields) => {
-    const neighborFields = nineSquare
-      .map(p => fields.find(f =>
-        field.position.x + p.x === f.position.x &&
-        field.position.y + p.y === f.position.y
-      ))
-      .filter(f => f);
-    if (neighborFields.length === 9) {
-      let plusCells = [
-        neighborFields[0].cells[frameSize * frameSize - 1],
-        ...neighborFields[1].cells.slice(frameSize * (frameSize - 1), frameSize * frameSize),
-        neighborFields[2].cells[frameSize * (frameSize - 1)]
-      ];
-      for (let i = 0; i < frameSize; i++) {
-        plusCells = plusCells.concat([
-          neighborFields[3].cells[frameSize * (i + 1) - 1],
-          ...field.cells.slice(frameSize * i, frameSize * (i + 1)),
-          neighborFields[5].cells[frameSize * i]
-        ]);
-      }
-      plusCells = plusCells.concat([
-        neighborFields[6].cells[frameSize - 1],
-        ...neighborFields[7].cells.slice(0, frameSize),
-        neighborFields[8].cells[0]
-      ]);
-      return Object.assign({}, field, {
-        loaded: true,
-        cells: plusCells.map((cell, cellIndex) => {
-          const cellNeighborIndexes = neighborIndexes(frameSize + 2, cellIndex);
-          if (cellNeighborIndexes.length !== 8) return;
-
-          return Object.assign(cell, {
-            neighboringMineCount: cellNeighborIndexes
-              .reduce((count, neighborIndex) => {
-                return count + (plusCells[neighborIndex].mine ? 1 : 0);
-              }, 0)
-          });
-        }).filter(n => n)
-      });
-    }
-    return field;
-  });
+  return createNewNeighbors([], { position: { x: 0, y: 0 } });
 }
 
 export default function fields(oldState, action){

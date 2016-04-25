@@ -38,18 +38,19 @@ function revealCells(state, positions){
 }
 export default function field(oldState, action){
   const state = oldState || defaultState(action);
+  let flagged = false;
+
   switch (action.type){
     case REVEAL:
       return revealCells(state, action.positions);
 
     case FLAG:
-      return updateCell(state, action.index, {
-        flagged: true
-      });
-
+      flagged = true;
     case UNFLAG:
-      return updateCell(state, action.index, {
-        flagged: false
+      const { x, y } = action.positions[0];
+      const index = y * frameSize + x;
+      return updateCell(state, index, {
+        flagged
       });
 
     default:
