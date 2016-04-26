@@ -56,7 +56,11 @@ function ensureFieldWithNeighbors(field, fields){
 }
 
 function defaultState(){
-  return createNewNeighbors([], { position: { x: 0, y: 0 } });
+  return nineSquare.reduce((fields, position) => {
+    return fields.concat(
+      createNewNeighbors(fields, { position })
+    );
+  }, []);
 }
 
 export default function fields(oldState, action){

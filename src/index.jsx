@@ -1,4 +1,5 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Provider|App)$" }]*/
+/* eslint-env browser */
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Provider|App)$" }]*/
 
 import React from 'react';
 import { render } from 'react-dom';
@@ -14,13 +15,18 @@ const store = createStore(
   applyMiddleware(thunk)
 );
 
-render((
-    <Provider store={store}>
-      <App></App>
-    </Provider>
-  ),
-  document.getElementById('container')
-);
+document.addEventListener("DOMContentLoaded", function(){
+  render((
+      <Provider store={store}>
+        <App></App>
+      </Provider>
+    ),
+    document.getElementById('container')
+  );
 
-document.body.scrollTop = 0;
-document.body.scrollLeft = 0;
+  requestAnimationFrame(() => {
+    document.body.scrollTop = 0;
+    document.body.scrollLeft = 0;
+  });
+});
+
