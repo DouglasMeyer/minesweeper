@@ -29,4 +29,3 @@ document.addEventListener("DOMContentLoaded", function(){
     document.body.scrollLeft = 0;
   });
 });
-

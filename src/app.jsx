@@ -1,9 +1,8 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field|FieldStatus)$" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields)$" }]*/
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
-import Field from './field.jsx';
-import FieldStatus from './field_status.jsx';
+import Fields from './components/fields.jsx';
 import { reveal, flag, unflag, keyDown, keyUp } from './actions';
 
 const _onResize = Symbol('onResize');
@@ -73,8 +72,8 @@ export default class App extends Component {
 
   render(){
     const { fields, onReveal, onFlag, onUnflag, onKeyDown, onKeyUp } = this.props;
-    const { size, position } = this.state;
-    const fieldSize = 10; // FIXME: Magic number
+    const { position, size } = this.state;
+
     return <div
       className='app'
       tabIndex={1}
@@ -84,23 +83,15 @@ export default class App extends Component {
       onTouchStart={ this.onTouchStart.bind(this) }
       onTouchMove={ this.onTouchMove.bind(this) }
       onTouchEnd={ this.onTouchEnd.bind(this) }
-      style={{
-        position: 'absolute',
-        willChange: 'top, left',
-        top: size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2,
-        left: size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2
-      }}
     >
-      { fields.map(field => {
-        return <Field
-          key={`${field.position.x}-${field.position.y}`}
-          {...field}
-          size={10 /* FIXME: magic number */}
-          onReveal={ onReveal }
-          onFlag={ onFlag }
-          onUnflag={ onUnflag }
-        ></Field>;
-      })}
+      <Fields
+        fields={ fields }
+        position={ position }
+        size={ size }
+        onReveal={ onReveal }
+        onFlag={ onFlag }
+        onUnflag={ onUnflag }
+      ></Fields>
     </div>;
   }
 }
