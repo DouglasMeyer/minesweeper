@@ -20831,14 +20831,12 @@ exports.keyUp = keyUp;
 
 var _helpers = require('./helpers');
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /* eslint-env browser */
-
-
 /*
  * action types
  */
 
-var REVEAL = exports.REVEAL = 'REVEAL';
+var REVEAL = exports.REVEAL = 'REVEAL'; /* eslint-env browser */
+
 var FLAG = exports.FLAG = 'FLAG';
 var UNFLAG = exports.UNFLAG = 'UNFLAG';
 var MOVE = exports.MOVE = 'MOVE';
@@ -20859,39 +20857,42 @@ function cellAt(fields, x, y) {
   return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
 }
 
+var positionsToReveal = [];
+var revealing = false;
 function reveal() {
   for (var _len = arguments.length, positions = Array(_len), _key = 0; _key < _len; _key++) {
     positions[_key] = arguments[_key];
   }
 
+  positionsToReveal = positionsToReveal.concat(positions);
+
   return function (dispatch, getState) {
-    requestAnimationFrame(function () {
+    if (revealing) return;
+    revealing = true;
+
+    function doReveal() {
+      revealing = false;
       var fields = getState().fields;
-      var unrevealedPositions = positions.filter(function (p) {
+      positionsToReveal = positionsToReveal.filter(function (p) {
         var cell = cellAt(fields, p.x, p.y);
         return cell && !cell.revealed;
       });
-      if (unrevealedPositions.length === 0) return;
-      dispatch({ type: REVEAL, positions: unrevealedPositions });
+      if (positionsToReveal.length === 0) return;
+      var positionsToRevealNow = positionsToReveal.splice(0, 20);
+      dispatch({ type: REVEAL, positions: positionsToRevealNow });
 
-      var positionsToReveal = unrevealedPositions.reduce(function (positionsToReveal, pos) {
+      positionsToRevealNow.forEach(function (pos) {
         var cell = cellAt(fields, pos.x, pos.y);
-        if (!cell.mine && cell.neighboringMineCount) return positionsToReveal;
-        return positionsToReveal.concat(_helpers.nineSquare.map(function (d) {
+        if (!cell.mine && cell.neighboringMineCount) return;
+        positionsToReveal = positionsToReveal.concat(_helpers.nineSquare.map(function (d) {
           return { x: pos.x + d.x, y: pos.y + d.y };
         }));
-      }, []).reduce(function (acc, pos) {
-        if (acc.indexOf(pos) !== -1) return acc;
-        var cell = cellAt(fields, pos.x, pos.y);
-        if (!cell || cell.revealed) return acc;
-        return [].concat(_toConsumableArray(acc), [pos]);
-      }, []);
+      });
       if (positionsToReveal.length) {
-        // requestAnimationFrame(() => {
-        dispatch(reveal.apply(undefined, _toConsumableArray(positionsToReveal)));
-        // });
+        requestAnimationFrame(doReveal);
       }
-    });
+    }
+    requestAnimationFrame(doReveal);
   };
 }
 
@@ -21568,7 +21569,6 @@ function fields(oldState, action) {
     case _actions.REVEAL:
     case _actions.FLAG:
     case _actions.UNFLAG:
-      console.log(action.positions.length);
       var positionsByField = action.positions.reduce(function (acc, position) {
         var fx = Math.floor(position.x / frameSize);
         var fy = Math.floor(position.y / frameSize);
