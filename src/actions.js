@@ -26,36 +26,39 @@ function cellAt(fields, x, y){
   return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
 }
 
+let positionsToReveal = [];
+let revealing = false;
 export function reveal(...positions){
+  positionsToReveal = positionsToReveal.concat(positions);
+
   return (dispatch, getState) => {
-    requestAnimationFrame(() => {
+    if (revealing) return;
+    revealing = true;
+
+    function doReveal(){
+      revealing = false;
       const fields = getState().fields;
-      const unrevealedPositions = positions.filter(p => {
+      positionsToReveal = positionsToReveal.filter(p => {
         const cell = cellAt(fields, p.x, p.y);
         return cell && !cell.revealed;
       });
-      if (unrevealedPositions.length === 0) return;
-      dispatch({ type: REVEAL, positions: unrevealedPositions });
+      if (positionsToReveal.length === 0) return;
+      const positionsToRevealNow = positionsToReveal.splice(0, 20);
+      dispatch({ type: REVEAL, positions: positionsToRevealNow });
 
-      const positionsToReveal = unrevealedPositions.reduce((positionsToReveal, pos) => {
+      positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
-        if (!cell.mine && cell.neighboringMineCount) return positionsToReveal;
-        return positionsToReveal.concat(
-          nineSquare.map(d => ({ x: pos.x + d.x, y: pos.y + d.y }))
+        if (!cell.mine && cell.neighboringMineCount) return;
+        positionsToReveal = positionsToReveal.concat(
+          nineSquare
+          .map(d => ({ x: pos.x + d.x, y: pos.y + d.y }))
         );
-      }, [])
-      .reduce((acc, pos) => {
-        if (acc.indexOf(pos) !== -1) return acc;
-        const cell = cellAt(fields, pos.x, pos.y);
-        if (!cell || cell.revealed) return acc;
-        return [ ...acc, pos ];
-      }, []);
+      });
       if (positionsToReveal.length){
-        requestAnimationFrame(() => {
-          dispatch(reveal(...positionsToReveal));
-        });
+        requestAnimationFrame(doReveal);
       }
-    });
+    }
+    requestAnimationFrame(doReveal);
   };
 }
 

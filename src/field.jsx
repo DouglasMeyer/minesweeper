@@ -48,7 +48,6 @@ class Field extends Component {
 
   render(){
     const { cells, position, size, onReveal, onFlag, onUnflag } = this.props;
-    console.log('field render');
     const cellsInRows = cells.reduce((cellsInRows, cell, index) => {
       if (index % size === 0) cellsInRows.push([]);
       cellsInRows[cellsInRows.length - 1].push(cell);
