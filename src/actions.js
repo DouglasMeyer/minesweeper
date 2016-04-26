@@ -74,12 +74,16 @@ const keyMap = {
   'KeyS': { y:  1, x:  0 },
   'KeyW': { y: -1, x:  0 },
   'KeyA': { y:  0, x: -1 },
-  'KeyD': { y:  0, x:  1 }
+  'KeyD': { y:  0, x:  1 },
+  'ArrowUp':    { y: -1, x:  0 },
+  'ArrowDown':  { y:  1, x:  0 },
+  'ArrowLeft':  { y:  0, x: -1 },
+  'ArrowRight': { y:  0, x:  1 }
 };
 const downedKeys = [];
 let moving = false;
 export function keyDown(key){
-  if (keyMap.hasOwnProperty(key) && downedKeys.indexOf(key) !== -1) return _ => {};
+  if (!keyMap.hasOwnProperty(key) || downedKeys.indexOf(key) !== -1) return _ => {};
   downedKeys.push(key);
   if (moving) return _ => {};
 
@@ -87,13 +91,15 @@ export function keyDown(key){
     let lastTime;
     function move(time){
       const timeDelta = time - lastTime;
-      const step = timeDelta / 10;
-      const down  = downedKeys.indexOf('KeyS') !== -1;
-      const up    = downedKeys.indexOf('KeyW') !== -1;
-      const left  = downedKeys.indexOf('KeyA') !== -1;
-      const right = downedKeys.indexOf('KeyD') !== -1;
-      const dx = (left ? -step : 0) + (right ? step : 0);
-      const dy = (up ? -step : 0) + (down ? step : 0);
+      const step = timeDelta / 5;
+      const { dx, dy } = downedKeys
+        .map(key => keyMap[key])
+        .reduce((posD, keyMapping) => {
+          return {
+            dx: posD.dx + keyMapping.x * step,
+            dy: posD.dy + keyMapping.y * step
+          };
+        }, { dx: 0, dy: 0 });
       moving = dx || dy;
       if (moving){
         lastTime = time;
@@ -110,4 +116,8 @@ export function keyUp(key){
   const index = downedKeys.indexOf(key);
   if (index !== -1) downedKeys.splice(index, 1);
   return _ => {};
+}
+
+export function scroll({ dx, dy }){
+  return { type: MOVE, dx, dy };
 }
