@@ -27,9 +27,28 @@ class Cell extends Component {
       ></a>;
     }
     if (mine) return <span className='cell cell--mine cell--revealed'></span>;
-    return <span className='cell cell--revealed'>{ neighboringMineCount === 0 ? '' : neighboringMineCount }</span>;
+    const [ red, green, blue ] = Cell.cellColors[neighboringMineCount];
+    return <span
+      className='cell cell--revealed'
+      style={{
+        color: `rgba(${red}, ${green}, ${blue}, 1)`
+      }}
+    >{ neighboringMineCount === 0 ? '' : neighboringMineCount }</span>;
   }
 }
+Cell.cellColors = [
+  /* eslint-disable */
+  [   1,   1,   1 ], // 0
+  [   0,   0,   1 ], // 1 blue
+  [   0, 1/4, 2/3 ], // 2
+  [   0, 2/4, 1/3 ], // 3
+  [ 1/4, 3/4,   0 ], // 4
+  [ 1/4, 4/5,   0 ], // 5 yellowish
+  [ 2/4, 2/5,   0 ], // 6 orange
+  [ 3/4, 1/5,   0 ], // 7
+  [   1,   0,   0 ]  // 8 red
+  /* eslint-enable */
+].map(c => c.map(i => Math.floor(i * 255)));
 Cell.propTypes = {
   mine: PropTypes.bool,
   revealed: PropTypes.bool,
