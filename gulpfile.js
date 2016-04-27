@@ -1,16 +1,16 @@
-var assign = require('lodash.assign'),
-    babelify = require('babelify'),
-    browserify = require('browserify'),
-    buffer = require('vinyl-buffer'),
-    exit = require('gulp-exit'),
-    gulp = require('gulp'),
-    gutil = require('gulp-util'),
-    notify = require('gulp-notify'),
-    rename = require('gulp-rename'),
-    source = require('vinyl-source-stream'),
-    sourcemaps = require('gulp-sourcemaps'),
-    uglify = require('gulp-uglify'),
-    watchify = require('watchify');
+var assign = require('lodash.assign');
+var babelify = require('babelify');
+var browserify = require('browserify');
+var buffer = require('vinyl-buffer');
+var exit = require('gulp-exit');
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var notify = require('gulp-notify');
+var rename = require('gulp-rename');
+var source = require('vinyl-source-stream');
+var sourcemaps = require('gulp-sourcemaps');
+var uglify = require('gulp-uglify');
+var watchify = require('watchify');
 
 // add custom browserify options here
 var customOpts = {
@@ -38,7 +38,7 @@ function bundle() {
     // Add transformation tasks to the pipeline here.
     .pipe(gutil.env.type === 'production' ? uglify() : gutil.noop())
     .pipe(rename({
-        dirname: ''
+      dirname: ''
     }))
     .pipe(sourcemaps.write('./')) // writes .map file
     .pipe(gulp.dest('./dist'))

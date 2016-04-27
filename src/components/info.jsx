@@ -15,7 +15,7 @@ class Info extends Component {
     const history = <ol
       className='info_list'
       onWheel={ e => e.stopPropagation() }
-      ref={ el => { console.log(el); if (el){ el.scrollTop = 999999; } } }
+      ref={ el => { if (el){ el.scrollTop = 999999; } } }
     >
       { info.slice(1).reverse().map(({reveals}, i) => <li key={i}>{ reveals }</li>)}
     </ol>;
