@@ -20828,6 +20828,7 @@ exports.flag = flag;
 exports.unflag = unflag;
 exports.keyDown = keyDown;
 exports.keyUp = keyUp;
+exports.scroll = scroll;
 
 var _helpers = require('./helpers');
 
@@ -20844,18 +20845,6 @@ var MOVE = exports.MOVE = 'MOVE';
 /*
  * action creators
  */
-
-var fieldSize = 10; // FIXME: Magic number
-
-function cellAt(fields, x, y) {
-  var fx = Math.floor(x / fieldSize);
-  var fy = Math.floor(y / fieldSize);
-  var field = fields.find(function (field) {
-    return field.position.x === fx && field.position.y === fy;
-  });
-  if (!field) return;
-  return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
-}
 
 var positionsToReveal = [];
 var revealing = false;
@@ -20874,7 +20863,7 @@ function reveal() {
       revealing = false;
       var fields = getState().fields;
       positionsToReveal = positionsToReveal.filter(function (p) {
-        var cell = cellAt(fields, p.x, p.y);
+        var cell = (0, _helpers.cellAt)(fields, p.x, p.y);
         return cell && !cell.revealed;
       });
       if (positionsToReveal.length === 0) return;
@@ -20882,8 +20871,8 @@ function reveal() {
       dispatch({ type: REVEAL, positions: positionsToRevealNow });
 
       positionsToRevealNow.forEach(function (pos) {
-        var cell = cellAt(fields, pos.x, pos.y);
-        if (!cell.mine && cell.neighboringMineCount) return;
+        var cell = (0, _helpers.cellAt)(fields, pos.x, pos.y);
+        if (cell.neighboringMineCount) return;
         positionsToReveal = positionsToReveal.concat(_helpers.nineSquare.map(function (d) {
           return { x: pos.x + d.x, y: pos.y + d.y };
         }));
@@ -20908,12 +20897,16 @@ var keyMap = {
   'KeyS': { y: 1, x: 0 },
   'KeyW': { y: -1, x: 0 },
   'KeyA': { y: 0, x: -1 },
-  'KeyD': { y: 0, x: 1 }
+  'KeyD': { y: 0, x: 1 },
+  'ArrowUp': { y: -1, x: 0 },
+  'ArrowDown': { y: 1, x: 0 },
+  'ArrowLeft': { y: 0, x: -1 },
+  'ArrowRight': { y: 0, x: 1 }
 };
 var downedKeys = [];
 var moving = false;
 function keyDown(key) {
-  if (keyMap.hasOwnProperty(key) && downedKeys.indexOf(key) !== -1) return function (_) {};
+  if (!keyMap.hasOwnProperty(key) || downedKeys.indexOf(key) !== -1) return function (_) {};
   downedKeys.push(key);
   if (moving) return function (_) {};
 
@@ -20921,13 +20914,20 @@ function keyDown(key) {
     var lastTime = void 0;
     function move(time) {
       var timeDelta = time - lastTime;
-      var step = timeDelta / 10;
-      var down = downedKeys.indexOf('KeyS') !== -1;
-      var up = downedKeys.indexOf('KeyW') !== -1;
-      var left = downedKeys.indexOf('KeyA') !== -1;
-      var right = downedKeys.indexOf('KeyD') !== -1;
-      var dx = (left ? -step : 0) + (right ? step : 0);
-      var dy = (up ? -step : 0) + (down ? step : 0);
+      var step = timeDelta / 5;
+
+      var _downedKeys$map$reduc = downedKeys.map(function (key) {
+        return keyMap[key];
+      }).reduce(function (posD, keyMapping) {
+        return {
+          dx: posD.dx + keyMapping.x * step,
+          dy: posD.dy + keyMapping.y * step
+        };
+      }, { dx: 0, dy: 0 });
+
+      var dx = _downedKeys$map$reduc.dx;
+      var dy = _downedKeys$map$reduc.dy;
+
       moving = dx || dy;
       if (moving) {
         lastTime = time;
@@ -20946,14 +20946,19 @@ function keyUp(key) {
   return function (_) {};
 }
 
-},{"./helpers":197}],194:[function(require,module,exports){
+function scroll(_ref) {
+  var dx = _ref.dx;
+  var dy = _ref.dy;
+
+  return { type: MOVE, dx: dx, dy: dy };
+}
+
+},{"./helpers":198}],194:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -20963,13 +20968,13 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _field = require('./field.jsx');
+var _fields = require('./components/fields.jsx');
 
-var _field2 = _interopRequireDefault(_field);
+var _fields2 = _interopRequireDefault(_fields);
 
-var _field_status = require('./field_status.jsx');
+var _info = require('./components/info.jsx');
 
-var _field_status2 = _interopRequireDefault(_field_status);
+var _info2 = _interopRequireDefault(_info);
 
 var _actions = require('./actions');
 
@@ -20979,10 +20984,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field|FieldStatus)$" }]*/
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }]*/
 
-
-var _onResize = Symbol('onResize');
 
 var App = function (_Component) {
   _inherits(App, _Component);
@@ -20990,52 +20993,13 @@ var App = function (_Component) {
   function App() {
     _classCallCheck(this, App);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this));
-
-    _this.state = {
-      position: { x: 0, y: 0 },
-      size: { width: 800, height: 600 }
-    };
-    _this[_onResize] = _this[_onResize].bind(_this);
-    return _this;
+    return _possibleConstructorReturn(this, Object.getPrototypeOf(App).apply(this, arguments));
   }
 
   _createClass(App, [{
-    key: 'componentWillMount',
-    value: function componentWillMount() {
-      this[_onResize]();
-    }
-  }, {
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      window.addEventListener('resize', this[_onResize]);
-    }
-  }, {
-    key: 'componentWillUnmount',
-    value: function componentWillUnmount() {
-      window.removeEventListener('resize', this[_onResize]);
-    }
-  }, {
-    key: _onResize,
-    value: function value() {
-      this.setState({
-        size: {
-          width: document.body.clientWidth,
-          height: document.body.clientHeight
-        }
-      });
-    }
-  }, {
     key: 'onWheel',
     value: function onWheel(e) {
-      var position = this.state.position;
-
-      this.setState({
-        position: {
-          x: position.x + e.deltaX,
-          y: position.y + e.deltaY
-        }
-      });
+      this.props.onScroll({ dx: e.deltaX, dy: e.deltaY });
     }
   }, {
     key: 'onTouchStart',
@@ -21058,17 +21022,14 @@ var App = function (_Component) {
       var _lastTouch = this.lastTouch;
       var x = _lastTouch.x;
       var y = _lastTouch.y;
-      var position = this.state.position;
       var _e$changedTouches$2 = e.changedTouches[0];
       var pageX = _e$changedTouches$2.pageX;
       var pageY = _e$changedTouches$2.pageY;
 
       this.lastTouch = { x: pageX, y: pageY };
-      this.setState({
-        position: {
-          x: position.x + (x - pageX),
-          y: position.y + (y - pageY)
-        }
+      this.props.onScroll({
+        dx: x - pageX,
+        dy: y - pageY
       });
     }
   }, {
@@ -21076,21 +21037,23 @@ var App = function (_Component) {
     value: function render() {
       var _props = this.props;
       var fields = _props.fields;
+      var position = _props.position;
+      var info = _props.info;
       var onReveal = _props.onReveal;
       var onFlag = _props.onFlag;
       var onUnflag = _props.onUnflag;
       var _onKeyDown = _props.onKeyDown;
       var _onKeyUp = _props.onKeyUp;
-      var _state = this.state;
-      var size = _state.size;
-      var position = _state.position;
 
-      var fieldSize = 10; // FIXME: Magic number
+
       return _react2.default.createElement(
         'div',
         {
           className: 'app',
-          tabIndex: 1,
+          tabIndex: 0,
+          ref: function ref(el) {
+            return el && el.focus();
+          },
           onKeyDown: function onKeyDown(e) {
             return _onKeyDown(e.nativeEvent.code);
           },
@@ -21100,23 +21063,15 @@ var App = function (_Component) {
           onWheel: this.onWheel.bind(this),
           onTouchStart: this.onTouchStart.bind(this),
           onTouchMove: this.onTouchMove.bind(this),
-          onTouchEnd: this.onTouchEnd.bind(this),
-          style: {
-            position: 'absolute',
-            willChange: 'top, left',
-            top: size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2,
-            left: size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2
-          }
+          onTouchEnd: this.onTouchEnd.bind(this)
         },
-        fields.map(function (field) {
-          return _react2.default.createElement(_field2.default, _extends({
-            key: field.position.x + '-' + field.position.y
-          }, field, {
-            size: 10 /* FIXME: magic number */,
-            onReveal: onReveal,
-            onFlag: onFlag,
-            onUnflag: onUnflag
-          }));
+        _react2.default.createElement(_info2.default, { info: info }),
+        _react2.default.createElement(_fields2.default, {
+          fields: fields,
+          position: position,
+          onReveal: onReveal,
+          onFlag: onFlag,
+          onUnflag: onUnflag
         })
       );
     }
@@ -21128,7 +21083,9 @@ var App = function (_Component) {
 exports.default = App;
 exports.default = (0, _reactRedux.connect)(function (state) {
   return {
-    fields: state.fields
+    fields: state.fields,
+    position: state.tracking.position,
+    info: state.info
   };
 }, function (dispatch) {
   return {
@@ -21146,11 +21103,14 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     },
     onKeyUp: function onKeyUp(k) {
       return dispatch((0, _actions.keyUp)(k));
+    },
+    onScroll: function onScroll(posD) {
+      return dispatch((0, _actions.scroll)(posD));
     }
   };
 })(App);
 
-},{"./actions":193,"./field.jsx":195,"./field_status.jsx":196,"react":180,"react-redux":35}],195:[function(require,module,exports){
+},{"./actions":193,"./components/fields.jsx":196,"./components/info.jsx":197,"react":180,"react-redux":35}],195:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21328,44 +21288,241 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactAddonsPureRenderMixin = require('react-addons-pure-render-mixin');
+
+var _reactAddonsPureRenderMixin2 = _interopRequireDefault(_reactAddonsPureRenderMixin);
+
+var _field = require('./field.jsx');
+
+var _field2 = _interopRequireDefault(_field);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function FieldStatus(_ref) {
-  var field = _ref.field;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  var mineCount = 0;
-  var flagCount = 0;
-  field.forEach(function (cell) {
-    if (cell.mine && !cell.revealed) mineCount += 1;
-    if (cell.flagged) flagCount += 1;
-  });
-  var flagsLeft = mineCount - flagCount;
-  return _react2.default.createElement(
-    'div',
-    null,
-    'Flags left for area: ',
-    flagsLeft
-  );
-}
-FieldStatus.propTypes = {
-  field: _react.PropTypes.array.isRequired
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
+
+
+var _onResize = Symbol('onResize');
+
+var Fields = function (_Component) {
+  _inherits(Fields, _Component);
+
+  function Fields() {
+    _classCallCheck(this, Fields);
+
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Fields).call(this));
+
+    _this.shouldComponentUpdate = _reactAddonsPureRenderMixin2.default.shouldComponentUpdate.bind(_this);
+    _this.state = { size: { width: 800, height: 600 } };
+    _this[_onResize] = _this[_onResize].bind(_this);
+    return _this;
+  }
+
+  _createClass(Fields, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      this[_onResize]();
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      window.addEventListener('resize', this[_onResize]);
+    }
+  }, {
+    key: 'componentWillUnmount',
+    value: function componentWillUnmount() {
+      window.removeEventListener('resize', this[_onResize]);
+    }
+  }, {
+    key: _onResize,
+    value: function value() {
+      this.setState({
+        size: {
+          width: document.body.clientWidth,
+          height: document.body.clientHeight
+        }
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _props = this.props;
+      var fields = _props.fields;
+      var position = _props.position;
+      var onReveal = _props.onReveal;
+      var onFlag = _props.onFlag;
+      var onUnflag = _props.onUnflag;
+      var size = this.state.size;
+
+      var fieldSize = 10; // FIXME: Magic number
+
+      return _react2.default.createElement(
+        'div',
+        {
+          style: {
+            position: 'absolute',
+            willChange: 'top, left',
+            top: size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2,
+            left: size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2
+          }
+        },
+        fields.map(function (field) {
+          return _react2.default.createElement(_field2.default, _extends({
+            key: field.position.x + '-' + field.position.y
+          }, field, {
+            size: 10 /* FIXME: magic number */,
+            onReveal: onReveal,
+            onFlag: onFlag,
+            onUnflag: onUnflag
+          }));
+        })
+      );
+    }
+  }]);
+
+  return Fields;
+}(_react.Component);
+
+Fields.propTypes = {
+  fields: _react.PropTypes.array.isRequired,
+  position: _react.PropTypes.shape({
+    x: _react.PropTypes.number.isRequired,
+    y: _react.PropTypes.number.isRequired
+  }),
+  size: _react.PropTypes.shape({
+    width: _react.PropTypes.number.isRequired,
+    height: _react.PropTypes.number.isRequired
+  }),
+  onReveal: _react.PropTypes.func.isRequired,
+  onFlag: _react.PropTypes.func.isRequired,
+  onUnflag: _react.PropTypes.func.isRequired
 };
 
-exports.default = FieldStatus;
+exports.default = Fields;
 
-},{"react":180}],197:[function(require,module,exports){
+},{"./field.jsx":195,"react":180,"react-addons-pure-render-mixin":31}],197:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactAddonsPureRenderMixin = require('react-addons-pure-render-mixin');
+
+var _reactAddonsPureRenderMixin2 = _interopRequireDefault(_reactAddonsPureRenderMixin);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
+
+
+var Info = function (_Component) {
+  _inherits(Info, _Component);
+
+  function Info() {
+    _classCallCheck(this, Info);
+
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Info).call(this));
+
+    _this.shouldComponentUpdate = _reactAddonsPureRenderMixin2.default.shouldComponentUpdate.bind(_this);
+    return _this;
+  }
+
+  _createClass(Info, [{
+    key: 'render',
+    value: function render() {
+      var info = this.props.info;
+
+      var total = _react2.default.createElement(
+        'div',
+        null,
+        'Total cells revealed: ',
+        info.reduce(function (a, i) {
+          return a + i.reveals;
+        }, 0)
+      );
+      var safely = _react2.default.createElement(
+        'div',
+        null,
+        'Cells safely revealed: ',
+        info[0].reveals
+      );
+      var history = _react2.default.createElement(
+        'ol',
+        {
+          className: 'info_list',
+          onWheel: function onWheel(e) {
+            return e.stopPropagation();
+          },
+          ref: function ref(el) {
+            console.log(el);if (el) {
+              el.scrollTop = 999999;
+            }
+          }
+        },
+        info.slice(1).reverse().map(function (_ref, i) {
+          var reveals = _ref.reveals;
+          return _react2.default.createElement(
+            'li',
+            { key: i },
+            reveals
+          );
+        })
+      );
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'info' },
+        info.length > 1 ? history : false,
+        total,
+        info.length > 1 ? safely : false
+      );
+    }
+  }]);
+
+  return Info;
+}(_react.Component);
+
+Info.propTypes = {
+  info: _react.PropTypes.arrayOf(_react.PropTypes.shape({
+    reveals: _react.PropTypes.number.isRequired
+  }).isRequired).isRequired
+};
+exports.default = Info;
+
+},{"react":180,"react-addons-pure-render-mixin":31}],198:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.neighborIndexes = neighborIndexes;
+exports.cellAt = cellAt;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var fieldSize = exports.fieldSize = 10;
 
 function neighborIndexes(size, index) {
   var leftNeighbors = [index - size - 1, index - 1, index + size - 1];
@@ -21377,7 +21534,17 @@ function neighborIndexes(size, index) {
 
 var nineSquare = exports.nineSquare = [{ x: -1, y: -1 }, { x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 0 }, { x: 0, y: 0 }, { x: 1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
 
-},{}],198:[function(require,module,exports){
+function cellAt(fields, x, y) {
+  var fx = Math.floor(x / fieldSize);
+  var fy = Math.floor(y / fieldSize);
+  var field = fields.find(function (field) {
+    return field.position.x === fx && field.position.y === fy;
+  });
+  if (!field) return;
+  return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
+}
+
+},{}],199:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -21406,18 +21573,25 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var store = (0, _redux.createStore)(_reducers2.default, (0, _redux.compose)((0, _redux.applyMiddleware)(_reduxThunk2.default), window.devToolsExtension ? window.devToolsExtension() : function (f) {
   return f;
-})); /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Provider|App)$" }]*/
+})); /* eslint-env browser */
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Provider|App)$" }]*/
 
-(0, _reactDom.render)(_react2.default.createElement(
-  _reactRedux.Provider,
-  { store: store },
-  _react2.default.createElement(_app2.default, null)
-), document.getElementById('container'));
+window.store = store;
 
-document.body.scrollTop = 0;
-document.body.scrollLeft = 0;
+document.addEventListener("DOMContentLoaded", function () {
+  (0, _reactDom.render)(_react2.default.createElement(
+    _reactRedux.Provider,
+    { store: store },
+    _react2.default.createElement(_app2.default, null)
+  ), document.getElementById('container'));
 
-},{"./app.jsx":194,"./reducers":201,"react":180,"react-dom":32,"react-redux":35,"redux":187,"redux-thunk":181}],199:[function(require,module,exports){
+  requestAnimationFrame(function () {
+    document.body.scrollTop = 0;
+    document.body.scrollLeft = 0;
+  });
+});
+
+},{"./app.jsx":194,"./reducers":202,"react":180,"react-dom":32,"react-redux":35,"redux":187,"redux-thunk":181}],200:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21493,7 +21667,7 @@ function field(oldState, action) {
   }
 }
 
-},{"../actions":193}],200:[function(require,module,exports){
+},{"../actions":193}],201:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21551,7 +21725,7 @@ function ensureFieldWithNeighbors(field, fields) {
       return Object.assign(cell, {
         neighboringMineCount: cellNeighborIndexes.reduce(function (count, neighborIndex) {
           return count + (plusCells[neighborIndex].mine ? 1 : 0);
-        }, 0)
+        }, cell.mine ? 1 : 0)
       });
     }).filter(function (n) {
       return n;
@@ -21560,7 +21734,9 @@ function ensureFieldWithNeighbors(field, fields) {
 }
 
 function defaultState() {
-  return createNewNeighbors([], { position: { x: 0, y: 0 } });
+  return _helpers.nineSquare.reduce(function (fields, position) {
+    return fields.concat(createNewNeighbors(fields, { position: position }));
+  }, []);
 }
 
 function fields(oldState, action) {
@@ -21601,12 +21777,13 @@ function fields(oldState, action) {
   }
 }
 
-},{"../actions":193,"../helpers":197,"./field":199}],201:[function(require,module,exports){
+},{"../actions":193,"../helpers":198,"./field":200}],202:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = reducer;
 
 var _redux = require('redux');
 
@@ -21618,13 +21795,72 @@ var _tracking = require('./tracking');
 
 var _tracking2 = _interopRequireDefault(_tracking);
 
+var _info = require('./info');
+
+var _info2 = _interopRequireDefault(_info);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = (0, _redux.combineReducers)({
-  fields: _fields2.default, tracking: _tracking2.default
+var combinedReducers = (0, _redux.combineReducers)({
+  fields: _fields2.default, tracking: _tracking2.default,
+  info: function info() {
+    var s = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    return s;
+  }
 });
 
-},{"./fields":200,"./tracking":202,"redux":187}],202:[function(require,module,exports){
+function reducer() {
+  var state = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+  var action = arguments[1];
+
+  return combinedReducers((0, _info2.default)(state, action), action);
+};
+
+},{"./fields":201,"./info":203,"./tracking":204,"redux":187}],203:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = info;
+
+var _actions = require('../actions');
+
+var _helpers = require('../helpers');
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+// function lazy(array){
+//   return {
+//     map: fn => lazy(array.map(fn)),
+//     some: fn => lazy(array.some(fn))
+//   };
+// }
+
+var defaultState = [{ reveals: 0 }];
+function info(state, action) {
+  if (!state.info) {
+    state = Object.assign({}, state, { info: defaultState });
+  }
+
+  switch (action.type) {
+    case _actions.REVEAL:
+      var fields = state.fields;
+      var newInfo = action.positions.reduce(function (state, pos) {
+        var cell = (0, _helpers.cellAt)(fields, pos.x, pos.y);
+        if (cell.mine) return [{ reveals: 0 }].concat(_toConsumableArray(state));
+        return [Object.assign({}, state[0], {
+          reveals: state[0].reveals + 1
+        })].concat(_toConsumableArray(state.slice(1)));
+      }, state.info);
+      return Object.assign({}, state, { info: newInfo });
+
+    default:
+      return state;
+  }
+}
+
+},{"../actions":193,"../helpers":198}],204:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21655,7 +21891,7 @@ function tracking() {
   }
 }
 
-},{"../actions":193}]},{},[198])
+},{"../actions":193}]},{},[199])
 
 
 //# sourceMappingURL=app.js.map
