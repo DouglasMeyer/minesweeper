@@ -1,5 +1,6 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
 import React, { PropTypes, Component } from 'react';
+import PureRenderMixin from 'react-addons-pure-render-mixin';
 
 import Field from './field.jsx';
 
@@ -7,6 +8,7 @@ const _onResize = Symbol('onResize');
 class Fields extends Component {
   constructor(){
     super();
+    this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
     this.state = { size: { width: 800, height: 600 } };
     this[_onResize] = this[_onResize].bind(this);
   }

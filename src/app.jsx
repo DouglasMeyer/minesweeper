@@ -1,8 +1,9 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields)$" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }]*/
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
+import Info from './components/info.jsx';
 import { reveal, flag, unflag, keyDown, keyUp, scroll } from './actions';
 
 export default class App extends Component {
@@ -32,7 +33,7 @@ export default class App extends Component {
 
   render(){
     const {
-      fields, position,
+      fields, position, info,
       onReveal, onFlag, onUnflag,
       onKeyDown, onKeyUp
     } = this.props;
@@ -48,6 +49,7 @@ export default class App extends Component {
       onTouchMove={ this.onTouchMove.bind(this) }
       onTouchEnd={ this.onTouchEnd.bind(this) }
     >
+      <Info info={ info }></Info>
       <Fields
         fields={ fields }
         position={ position }
@@ -62,7 +64,8 @@ export default class App extends Component {
 export default connect(
   state => ({
     fields: state.fields,
-    position: state.tracking.position
+    position: state.tracking.position,
+    info: state.info
   }),
   dispatch => ({
     onReveal: pos => dispatch(reveal(pos)),

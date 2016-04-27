@@ -49,7 +49,7 @@ function ensureFieldWithNeighbors(field, fields){
         neighboringMineCount: cellNeighborIndexes
           .reduce((count, neighborIndex) => {
             return count + (plusCells[neighborIndex].mine ? 1 : 0);
-          }, 0)
+          }, cell.mine ? 1 : 0)
       });
     }).filter(n => n)
   });

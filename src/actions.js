@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { nineSquare } from './helpers';
+import { nineSquare, cellAt } from './helpers';
 
 /*
  * action types
@@ -13,18 +13,6 @@ export const MOVE = 'MOVE';
 /*
  * action creators
  */
-
-const fieldSize = 10; // FIXME: Magic number
-
-function cellAt(fields, x, y){
-  const fx = Math.floor(x / fieldSize);
-  const fy = Math.floor(y / fieldSize);
-  const field = fields.find(field => {
-    return field.position.x === fx && field.position.y === fy;
-  });
-  if (!field) return;
-  return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
-}
 
 let positionsToReveal = [];
 let revealing = false;
@@ -48,7 +36,7 @@ export function reveal(...positions){
 
       positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
-        if (!cell.mine && cell.neighboringMineCount) return;
+        if (cell.neighboringMineCount) return;
         positionsToReveal = positionsToReveal.concat(
           nineSquare
           .map(d => ({ x: pos.x + d.x, y: pos.y + d.y }))
