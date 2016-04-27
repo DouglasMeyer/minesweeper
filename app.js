@@ -21119,6 +21119,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require('react');
@@ -21183,9 +21185,21 @@ var Cell = function (_Component) {
         });
       }
       if (mine) return _react2.default.createElement('span', { className: 'cell cell--mine cell--revealed' });
+
+      var _Cell$cellColors$neig = _slicedToArray(Cell.cellColors[neighboringMineCount], 3);
+
+      var red = _Cell$cellColors$neig[0];
+      var green = _Cell$cellColors$neig[1];
+      var blue = _Cell$cellColors$neig[2];
+
       return _react2.default.createElement(
         'span',
-        { className: 'cell cell--revealed' },
+        {
+          className: 'cell cell--revealed',
+          style: {
+            color: 'rgba(' + red + ', ' + green + ', ' + blue + ', 1)'
+          }
+        },
         neighboringMineCount === 0 ? '' : neighboringMineCount
       );
     }
@@ -21194,6 +21208,23 @@ var Cell = function (_Component) {
   return Cell;
 }(_react.Component);
 
+Cell.cellColors = [
+/* eslint-disable */
+[1, 1, 1], // 0
+[0, 0, 1], // 1 blue
+[0, 1 / 4, 2 / 3], // 2
+[0, 2 / 4, 1 / 3], // 3
+[1 / 4, 3 / 4, 0], // 4
+[1 / 4, 4 / 5, 0], // 5 yellowish
+[2 / 4, 2 / 5, 0], // 6 orange
+[3 / 4, 1 / 5, 0], // 7
+[1, 0, 0] // 8 red
+/* eslint-enable */
+].map(function (c) {
+  return c.map(function (i) {
+    return Math.floor(i * 255);
+  });
+});
 Cell.propTypes = {
   mine: _react.PropTypes.bool,
   revealed: _react.PropTypes.bool,
@@ -21571,12 +21602,8 @@ var _app2 = _interopRequireDefault(_app);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var store = (0, _redux.createStore)(_reducers2.default, (0, _redux.compose)((0, _redux.applyMiddleware)(_reduxThunk2.default), window.devToolsExtension ? window.devToolsExtension() : function (f) {
-  return f;
-})); /* eslint-env browser */
+var store = (0, _redux.createStore)(_reducers2.default, (0, _redux.applyMiddleware)(_reduxThunk2.default)); /* eslint-env browser */
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Provider|App)$" }]*/
-
-window.store = store;
 
 document.addEventListener("DOMContentLoaded", function () {
   (0, _reactDom.render)(_react2.default.createElement(
@@ -21829,13 +21856,6 @@ var _actions = require('../actions');
 var _helpers = require('../helpers');
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-// function lazy(array){
-//   return {
-//     map: fn => lazy(array.map(fn)),
-//     some: fn => lazy(array.some(fn))
-//   };
-// }
 
 var defaultState = [{ reveals: 0 }];
 function info(state, action) {

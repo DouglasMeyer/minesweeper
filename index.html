@@ -70,6 +70,8 @@
         height: 2rem;
         border: 1px solid #AAA;
         background: linear-gradient(#E3E3E3, #FFF);
+        font-weight: bold;
+        font-family: sans-serif;
       }
       a.cell { cursor: pointer; }
       .cell--revealed {
@@ -78,15 +80,19 @@
       }
       .cell--flag:after {
         content: "\2691";
-        font-size: 2rem;
+        font-size: 1.8rem;
+        width: 2rem;
+        line-height: 2rem;
+        text-align: center;
       }
       .cell--mine.cell--revealed:after {
         position: absolute;
+        z-index: 1;
         top: 0; left: 0;
         content: "\2601";
         font-size: 2rem;
-        animation: 0.5s explode;
-        color: #888;
+        animation: 0.3s explode;
+        color: #AAA;
         opacity: 0;
         pointer-events: none;
       }
@@ -103,8 +109,11 @@
       .cell--mine:before {
         position: absolute;
         top: 0; left: 0;
+        width: 2rem;
+        line-height: 2.2rem;
         content: "\1f4a3";
-        font-size: 2rem;
+        font-size: 1.8rem;
+        font-weight: normal;
       }
     </style>
   </head>
