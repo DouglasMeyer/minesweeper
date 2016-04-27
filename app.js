@@ -21476,7 +21476,7 @@ var Info = function (_Component) {
             return e.stopPropagation();
           },
           ref: function ref(el) {
-            console.log(el);if (el) {
+            if (el) {
               el.scrollTop = 999999;
             }
           }
