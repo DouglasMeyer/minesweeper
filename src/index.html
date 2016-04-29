@@ -25,40 +25,32 @@
         outline: none;
       }
       .info {
+        display: flex;
+        flex-direction: column-reverse;
         position: absolute;
-        z-index: 1;
-        top: 0.5rem;
-        left: 0.5rem;
-        padding: 0.5rem;
+        z-index: 2;
+        left: 1rem;
+        top: 2rem;
+        transition: all 0.2s;
+        padding: 1rem 0.5rem 0.5rem;
+        border-radius: 0.5rem;
         background-color: rgba(0,0,0, 0.6);
         color: white;
         font-weight: bold;
         font-family: sans-serif;
+        transform: translateY(-100%);
+      }
+      .info:hover {
+        transform: translateY(-2.5rem);
+      }
+      .info > * {
+        padding-top: 0.2em;
       }
       .info_list {
-        margin: 1em 0 0;
+        margin: 0;
         padding-left: 2rem;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 1s;
-      }
-      .info_list:hover {
         max-height: 100px;
         overflow-y: auto;
-      }
-      .info_list:before {
-        position: absolute;
-        top: 0.5rem;
-        left: 0;
-        width: 100%;
-        display: block;
-        content: '^ more ^';
-        opacity: 0.4;
-        text-align: center;
-        font-size: 0.8em;
-      }
-      .info_list:hover:before {
-        content: 'v less v';
       }
       .option {
         font-size: 0.8rem;

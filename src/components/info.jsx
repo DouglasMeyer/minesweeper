@@ -39,15 +39,23 @@ class Info extends Component {
     const { safeStart, hardcore } = this.state;
     const total = <div>Total cells revealed: { info.reduce((a, i) => a + i.reveals, 0) }</div>;
     const safely = <div>Cells safely revealed: { info[0].reveals }</div>;
-    const history = <ol
-      className='info_list'
-      onWheel={ e => e.stopPropagation() }
-      ref={ el => { if (el){ el.scrollTop = 999999; } } }
-    >
-      { info.slice(1).reverse().map(({reveals}, i) => <li key={i}>{ reveals }</li>)}
-    </ol>;
+    const longest = <div>Longest run: { info.map(i => i.reveals).sort().reverse()[0] }</div>;
+    const history = <div>
+      Previous runs:
+      <ol
+        className='info_list'
+        onWheel={ e => e.stopPropagation() }
+        ref={ el => { if (el){ el.scrollTop = 999999; } } }
+      >
+        { info.slice(1).reverse().map(({reveals}, i) => <li key={i}>{ reveals }</li>)}
+      </ol>
+    </div>;
 
     return <div className='info'>
+      { info.length > 1 ? safely : false }
+      { total }
+      { info.length > 1 ? longest : false }
+      { info.length > 1 ? history : false }
       <div style={{
         display: 'flex',
         justifyContent: 'space-around',
@@ -56,9 +64,6 @@ class Info extends Component {
         <label className='option'><input type='checkbox' checked={ safeStart || false } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
         <label className='option'><input type='checkbox' checked={ hardcore || false } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
       </div>
-      { /*info.length > 1 ? history : false*/ }
-      { total }
-      { info.length > 1 ? safely : false }
     </div>;
   }
 }
