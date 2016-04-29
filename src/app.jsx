@@ -1,4 +1,3 @@
-/* eslint-env browser */
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }]*/
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -7,19 +6,10 @@ import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
 import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe } from './actions';
 
-const options = location.hash
-  .slice(1)
-  .split(',')
-  .filter(e => e)
-  .reduce((state, key) => {
-    return Object.assign({}, state, {
-      [key]: true
-    });
-  }, {});
-
 export default class App extends Component {
   componentDidMount(){
-    if (options.safeStart) this.props.onRevealSafe();
+    const { safeStart } = this.props.info.options;
+    if (safeStart) this.props.onRevealSafe();
   }
 
   onWheel(e){
@@ -64,7 +54,7 @@ export default class App extends Component {
       onTouchMove={ this.onTouchMove.bind(this) }
       onTouchEnd={ this.onTouchEnd.bind(this) }
     >
-      <Info info={ info }></Info>
+      <Info { ...info }></Info>
       <Fields
         fields={ fields }
         position={ position }

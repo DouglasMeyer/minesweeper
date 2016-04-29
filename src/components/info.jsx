@@ -3,8 +3,7 @@
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 
-function RevealSummary({ info }){
-  const reveals = info.map(i => i.reveals);
+function RevealSummary({ reveals }){
   const current = reveals[0];
   const best = Math.max.apply(null, reveals);
   const total = reveals.reduce((s, r) => s + r);
@@ -15,11 +14,11 @@ function RevealSummary({ info }){
 
   return <div className='info_summary'>
     <small>
-      current{ info.length > 1 ? ' < best = total' : false }
+      current{ reveals.length > 1 ? ' < best = total' : false }
     </small>
     <div>
       Squares revealed: { current }
-      { info.length > 1 ? summaryExtra : false }
+      { reveals.length > 1 ? summaryExtra : false }
     </div>
   </div>;
 }
@@ -28,15 +27,11 @@ class Info extends Component {
   constructor(){
     super();
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
-    this.state = location.hash
-      .slice(1)
-      .split(',')
-      .filter(e => e)
-      .reduce((state, key) => {
-        return Object.assign({}, state, {
-          [key]: true
-        });
-      }, {});
+    this.state = {};
+  }
+
+  componentDidMount(){
+    this.setState(this.props.options);
   }
 
   toggleSafeStart(){
@@ -56,7 +51,7 @@ class Info extends Component {
   }
 
   render(){
-    const { info } = this.props;
+    const { reveals, options } = this.props;
     const { safeStart, hardcore } = this.state;
     const history = <div>
       Previous runs:
@@ -65,13 +60,18 @@ class Info extends Component {
         onWheel={ e => e.stopPropagation() }
         ref={ el => { if (el){ el.scrollTop = 999999; } } }
       >
-        { info.slice(1).reverse().map(({reveals}, i) => <li key={i}>{ reveals }</li>)}
+        { reveals.slice(1).reverse().map((n, i) => <li key={i}>{ n }</li>)}
       </ol>
     </div>;
+    const optionsChanged = Object.keys(options).some(k => options[k] !== this.state[k]);
+    const reload = <small>
+      Reload to use these settings.
+    </small>;
 
     return <div className='info'>
-      <RevealSummary info={info}></RevealSummary>
-      { info.length > 1 ? history : false }
+      <RevealSummary reveals={reveals}></RevealSummary>
+      { reveals.length > 1 ? history : false }
+      { optionsChanged ? reload : false }
       <div style={{
         display: 'flex',
         justifyContent: 'space-around',
@@ -85,8 +85,10 @@ class Info extends Component {
 }
 
 Info.propTypes = {
-  info: PropTypes.arrayOf(PropTypes.shape({
-    reveals: PropTypes.number.isRequired
-  }).isRequired).isRequired
+  reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  options: PropTypes.shape({
+    safeStart: PropTypes.boolean,
+    hardcore: PropTypes.boolean
+  }).isRequired
 };
 export default Info;
