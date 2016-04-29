@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { nineSquare, cellAt } from './helpers';
+import { nineSquare, cellAt, fieldSize } from './helpers';
 
 /*
  * action types
@@ -47,6 +47,30 @@ export function reveal(...positions){
       }
     }
     requestAnimationFrame(doReveal);
+  };
+}
+
+export function revealSafe(){
+  return (dispatch, getState) => {
+    const fields = getState().fields;
+    const center = { x: fieldSize / 2, y: fieldSize / 2 };
+    const cellsToCheck = [center];
+    let cellPos = cellsToCheck.shift(1);
+    let cell = cellAt(fields, cellPos.x, cellPos.y);
+    while (cell.mine || cell.neighboringMineCount){
+      cellsToCheck.push(...nineSquare
+        .filter(({x, y}) => x !== 0 || y !== 0)
+        .map(({x, y}) => ({ x: cellPos.x + x, y: cellPos.y + y }))
+        .filter(({x, y}) => {
+          const currentDistanceToCenter = Math.max(Math.abs(center.x - cellPos.x), Math.abs(center.y - cellPos.y));
+          const newDistanceToCenter = Math.max(Math.abs(center.x - x), Math.abs(center.y - y));
+          return newDistanceToCenter >= currentDistanceToCenter;
+        })
+      );
+      cellPos = cellsToCheck.shift(1);
+      cell = cellAt(fields, cellPos.x, cellPos.y);
+    }
+    reveal(cellPos)(dispatch, getState);
   };
 }
 

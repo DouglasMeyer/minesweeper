@@ -1,14 +1,13 @@
 import { REVEAL, FLAG, UNFLAG } from '../actions';
 import fieldReducer from './field';
-import { neighborIndexes, nineSquare } from '../helpers';
+import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
-const frameSize = 10; // FIXME: Magic number
 function createNewNeighbors(fields, field){
   return nineSquare
   .map(p => ({ x: field.position.x + p.x, y: field.position.y + p.y }))
   .map(p => {
     const field = fields.find(f => f.position.x === p.x && f.position.y === p.y);
-    if (!field) return fieldReducer(undefined, { x: p.x * frameSize, y: p.y * frameSize });
+    if (!field) return fieldReducer(undefined, { x: p.x * fieldSize, y: p.y * fieldSize });
   })
   .filter(e => e);
 }
@@ -23,26 +22,26 @@ function ensureFieldWithNeighbors(field, fields){
     .filter(f => f);
   if (neighborFields.length !== 9) return field;
   let plusCells = [
-    neighborFields[0].cells[frameSize * frameSize - 1],
-    ...neighborFields[1].cells.slice(frameSize * (frameSize - 1), frameSize * frameSize),
-    neighborFields[2].cells[frameSize * (frameSize - 1)]
+    neighborFields[8].cells[fieldSize * fieldSize - 1],
+    ...neighborFields[1].cells.slice(fieldSize * (fieldSize - 1), fieldSize * fieldSize),
+    neighborFields[2].cells[fieldSize * (fieldSize - 1)]
   ];
-  for (let i = 0; i < frameSize; i++) {
+  for (let i = 0; i < fieldSize; i++) {
     plusCells = plusCells.concat([
-      neighborFields[3].cells[frameSize * (i + 1) - 1],
-      ...field.cells.slice(frameSize * i, frameSize * (i + 1)),
-      neighborFields[5].cells[frameSize * i]
+      neighborFields[7].cells[fieldSize * (i + 1) - 1],
+      ...field.cells.slice(fieldSize * i, fieldSize * (i + 1)),
+      neighborFields[3].cells[fieldSize * i]
     ]);
   }
   plusCells = plusCells.concat([
-    neighborFields[6].cells[frameSize - 1],
-    ...neighborFields[7].cells.slice(0, frameSize),
-    neighborFields[8].cells[0]
+    neighborFields[6].cells[fieldSize - 1],
+    ...neighborFields[5].cells.slice(0, fieldSize),
+    neighborFields[4].cells[0]
   ]);
   return Object.assign({}, field, {
     loaded: true,
     cells: plusCells.map((cell, cellIndex) => {
-      const cellNeighborIndexes = neighborIndexes(frameSize + 2, cellIndex);
+      const cellNeighborIndexes = neighborIndexes(fieldSize + 2, cellIndex);
       if (cellNeighborIndexes.length !== 8) return;
 
       return Object.assign(cell, {
@@ -56,11 +55,13 @@ function ensureFieldWithNeighbors(field, fields){
 }
 
 function defaultState(){
-  return nineSquare.reduce((fields, position) => {
-    return fields.concat(
-      createNewNeighbors(fields, { position })
-    );
-  }, []);
+  return nineSquare
+    .reduce((fields, position) => {
+      return fields.concat(
+        createNewNeighbors(fields, { position })
+      );
+    }, [])
+    .map((field, _i, fields) => ensureFieldWithNeighbors(field, fields));
 }
 
 export default function fields(oldState, action){
@@ -70,12 +71,12 @@ export default function fields(oldState, action){
     case FLAG:
     case UNFLAG:
       const positionsByField = action.positions.reduce((acc, position) => {
-        const fx = Math.floor(position.x / frameSize);
-        const fy = Math.floor(position.y / frameSize);
+        const fx = Math.floor(position.x / fieldSize);
+        const fy = Math.floor(position.y / fieldSize);
         const field = state.find(field => field.position.x === fx && field.position.y === fy);
         if (!acc.has(field)) acc.set(field, []);
         const positions = acc.get(field);
-        positions.push({ x: position.x - fx * frameSize, y: position.y - fy * frameSize });
+        positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
         acc.set(field, positions);
         return acc;
       }, new Map());

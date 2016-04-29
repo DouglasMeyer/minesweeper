@@ -1,14 +1,14 @@
 import { REVEAL, FLAG, UNFLAG } from '../actions';
+import { fieldSize } from '../helpers';
 
-const frameSize = 10; // FIXME: Magic number
 const mineFrequency = 0.2;
 const blankCells = [];
-for (let i = 0; i < frameSize * frameSize; i++) blankCells.push(0);
+for (let i = 0; i < fieldSize * fieldSize; i++) blankCells.push(0);
 
 function defaultState({ x, y }){
   const position = {
-    x: Math.floor(x / frameSize),
-    y: Math.floor(y / frameSize)
+    x: Math.floor(x / fieldSize),
+    y: Math.floor(y / fieldSize)
   };
   const cells = blankCells
     .map(() => ({ mine: Math.random() < mineFrequency }));
@@ -28,7 +28,7 @@ function updateCell(state, i, props){
 }
 function revealCells(state, positions){
   return positions.reduce((newState, { x, y }) => {
-    const index = y * frameSize + x;
+    const index = y * fieldSize + x;
     if (newState.cells[index].revealed) return newState;
     return updateCell(newState, index, {
       revealed: true,
@@ -48,7 +48,7 @@ export default function field(oldState, action){
       flagged = true;
     case UNFLAG:
       const { x, y } = action.positions[0];
-      const index = y * frameSize + x;
+      const index = y * fieldSize + x;
       return updateCell(state, index, {
         flagged
       });

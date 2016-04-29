@@ -10,11 +10,10 @@ export function neighborIndexes(size, index){
   ].filter(i => i >= 0 && i < size * size);
 }
 
-export const nineSquare = [
-  { x: -1, y: -1 }, { x:  0, y: -1 }, { x:  1, y: -1 },
-  { x: -1, y:  0 }, { x:  0, y:  0 }, { x:  1, y:  0 },
-  { x: -1, y:  1 }, { x:  0, y:  1 }, { x:  1, y:  1 }
-];
+const square = [-1, 0, 1].reduce((square, y) =>
+  square.concat([-1, 0, 1].map(x => ({ x, y })))
+, []);
+export const nineSquare = [4, 1, 2, 5, 8, 7, 6, 3, 0].map(i => square[i]);
 
 export function cellAt(fields, x, y){
   const fx = Math.floor(x / fieldSize);

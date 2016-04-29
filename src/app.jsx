@@ -1,12 +1,27 @@
+/* eslint-env browser */
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }]*/
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
-import { reveal, flag, unflag, keyDown, keyUp, scroll } from './actions';
+import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe } from './actions';
+
+const options = location.hash
+  .slice(1)
+  .split(',')
+  .filter(e => e)
+  .reduce((state, key) => {
+    return Object.assign({}, state, {
+      [key]: true
+    });
+  }, {});
 
 export default class App extends Component {
+  componentDidMount(){
+    if (options.safeStart) this.props.onRevealSafe();
+  }
+
   onWheel(e){
     this.props.onScroll({ dx: e.deltaX, dy: e.deltaY });
   }
@@ -73,6 +88,7 @@ export default connect(
     onUnflag: pos => dispatch(unflag(pos)),
     onKeyDown: k => dispatch(keyDown(k)),
     onKeyUp: k => dispatch(keyUp(k)),
-    onScroll: posD => dispatch(scroll(posD))
+    onScroll: posD => dispatch(scroll(posD)),
+    onRevealSafe: () => dispatch(revealSafe())
   })
 )(App);
