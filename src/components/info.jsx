@@ -1,7 +1,28 @@
 /* eslint-env browser */
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
+
+function RevealSummary({ info }){
+  const reveals = info.map(i => i.reveals);
+  const current = reveals[0];
+  const best = Math.max.apply(null, reveals);
+  const total = reveals.reduce((s, r) => s + r);
+  const summaryExtra = <small>
+    &nbsp;
+    &lt; { best }&nbsp;&nbsp;= { total }
+  </small>;
+
+  return <div className='info_summary'>
+    <small>
+      current{ info.length > 1 ? ' < best = total' : false }
+    </small>
+    <div>
+      Squares revealed: { current }
+      { info.length > 1 ? summaryExtra : false }
+    </div>
+  </div>;
+}
 
 class Info extends Component {
   constructor(){
@@ -37,9 +58,6 @@ class Info extends Component {
   render(){
     const { info } = this.props;
     const { safeStart, hardcore } = this.state;
-    const total = <div>Total cells revealed: { info.reduce((a, i) => a + i.reveals, 0) }</div>;
-    const safely = <div>Cells safely revealed: { info[0].reveals }</div>;
-    const longest = <div>Longest run: { info.map(i => i.reveals).sort().reverse()[0] }</div>;
     const history = <div>
       Previous runs:
       <ol
@@ -52,9 +70,7 @@ class Info extends Component {
     </div>;
 
     return <div className='info'>
-      { info.length > 1 ? safely : false }
-      { total }
-      { info.length > 1 ? longest : false }
+      <RevealSummary info={info}></RevealSummary>
       { info.length > 1 ? history : false }
       <div style={{
         display: 'flex',

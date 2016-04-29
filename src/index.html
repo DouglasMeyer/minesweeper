@@ -30,7 +30,7 @@
         position: absolute;
         z-index: 2;
         left: 1rem;
-        top: 2rem;
+        top: 2.75rem;
         transition: all 0.2s;
         padding: 1rem 0.5rem 0.5rem;
         border-radius: 0.5rem;
@@ -41,16 +41,23 @@
         transform: translateY(-100%);
       }
       .info:hover {
-        transform: translateY(-2.5rem);
+        transform: translateY(-3.75rem); /* top + 1 */
       }
       .info > * {
-        padding-top: 0.2em;
+        padding-top: 0.5em;
+      }
+      .info_summary {
+        text-align: right;
+      }
+      .info_summary small {
+        font-weight: normal;
       }
       .info_list {
         margin: 0;
         padding-left: 2rem;
         max-height: 100px;
         overflow-y: auto;
+        border: 1px solid #888;
       }
       .option {
         font-size: 0.8rem;
