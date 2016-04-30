@@ -67,7 +67,7 @@ class Info extends Component {
 
   onNewGame(){
     this.props.onNewGame();
-    this.revealIfSafeStart();
+    setTimeout(this.revealIfSafeStart.bind(this));
   }
 
   revealIfSafeStart(){

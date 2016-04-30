@@ -38,13 +38,17 @@ class Fields extends Component {
     const { fields, position, onReveal, onFlag, onUnflag } = this.props;
     const { size } = this.state;
     const fieldSize = 10; // FIXME: Magic number
+    const top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2;
+    const left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2;
 
     return <div
+      className='fields'
       style={{
         position: 'absolute',
         willChange: 'top, left',
-        top: size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2,
-        left: size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2
+        top,
+        left,
+        transformOrigin: `${size.width / 2 - left}px ${size.height / 2 - top}px`
       }}
     >
       { fields.map(field => {

@@ -29,7 +29,10 @@ export function reveal(...positions){
       const state = getState();
       const fields = state.fields;
       const { isGameOver } = state.info;
-      if (isGameOver) return;
+      if (isGameOver){
+        positionsToReveal = [];
+        return;
+      };
       positionsToReveal = positionsToReveal.filter(p => {
         const cell = cellAt(fields, p.x, p.y);
         return cell && !cell.revealed;
