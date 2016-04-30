@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary)$" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary|History)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 
@@ -23,14 +23,29 @@ function RevealSummary({ reveals }){
   </div>;
 }
 
+function History({ reveals }){
+  if (reveals.length === 1) return null;
+
+  return <div>
+    Previous runs:
+    <ol
+      className='info_list'
+      onWheel={ e => e.stopPropagation() }
+      ref={ el => { if (el){ el.scrollTop = 999999; } } }
+    >
+      { reveals.slice(1).reverse().map((n, i) => <li key={i}>{ n }</li>)}
+    </ol>
+  </div>;
+}
+
 class Info extends Component {
   constructor(){
     super();
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
-    this.state = {};
   }
 
   componentDidMount(){
+    this.revealIfSafeStart();
     this.setState(this.props.options);
   }
 
@@ -50,35 +65,45 @@ class Info extends Component {
       .join(',');
   }
 
+  onNewGame(){
+    this.props.onNewGame();
+    this.revealIfSafeStart();
+  }
+
+  revealIfSafeStart(){
+    const { onRevealSafe } = this.props;
+    const { safeStart } = this.props.options;
+
+    if (safeStart) onRevealSafe();
+  }
+
   render(){
+    if (!this.state) return null;
     const { reveals, options } = this.props;
     const { safeStart, hardcore } = this.state;
-    const history = <div>
-      Previous runs:
-      <ol
-        className='info_list'
-        onWheel={ e => e.stopPropagation() }
-        ref={ el => { if (el){ el.scrollTop = 999999; } } }
-      >
-        { reveals.slice(1).reverse().map((n, i) => <li key={i}>{ n }</li>)}
-      </ol>
-    </div>;
     const optionsChanged = Object.keys(options).some(k => options[k] !== this.state[k]);
-    const reload = <small>
-      Reload to use these settings.
+    let newGame = <small>
+      <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
     </small>;
+    if (optionsChanged){
+      newGame = <small>
+        To use these settings&nbsp;
+        <a onClick={ this.onNewGame.bind(this) }>start a new game</a>
+        .
+      </small>;
+    }
 
     return <div className='info'>
       <RevealSummary reveals={reveals}></RevealSummary>
-      { reveals.length > 1 ? history : false }
-      { optionsChanged ? reload : false }
+      <History reveals={reveals}></History>
+      { newGame }
       <div style={{
         display: 'flex',
         justifyContent: 'space-around',
         height: '1.5rem'
       }}>
-        <label className='option'><input type='checkbox' checked={ safeStart || false } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
-        <label className='option'><input type='checkbox' checked={ hardcore || false } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
+        <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
+        <label className='option'><input type='checkbox' checked={ hardcore } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
       </div>
     </div>;
   }
@@ -89,6 +114,8 @@ Info.propTypes = {
   options: PropTypes.shape({
     safeStart: PropTypes.boolean,
     hardcore: PropTypes.boolean
-  }).isRequired
+  }).isRequired,
+  onNewGame: PropTypes.func.isRequired,
+  onRevealSafe: PropTypes.func.isRequired
 };
 export default Info;

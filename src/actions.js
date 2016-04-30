@@ -9,6 +9,7 @@ export const REVEAL = 'REVEAL';
 export const FLAG = 'FLAG';
 export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
+export const NEW_GAME = 'NEW_GAME';
 
 /*
  * action creators
@@ -25,7 +26,10 @@ export function reveal(...positions){
 
     function doReveal(){
       revealing = false;
-      const fields = getState().fields;
+      const state = getState();
+      const fields = state.fields;
+      const { isGameOver } = state.info;
+      if (isGameOver) return;
       positionsToReveal = positionsToReveal.filter(p => {
         const cell = cellAt(fields, p.x, p.y);
         return cell && !cell.revealed;
@@ -131,4 +135,8 @@ export function keyUp(key){
 
 export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
+}
+
+export function newGame(){
+  return { type: NEW_GAME };
 }

@@ -2,25 +2,27 @@
 import { REVEAL } from '../actions';
 import { cellAt } from '../helpers';
 
-const defaultState = {
-  reveals: [ 0 ],
-  options: location.hash
-    .slice(1)
-    .split(',')
-    .filter(e => e)
-    .reduce((state, key) => {
-      return Object.assign({}, state, {
-        [key]: true
-      });
-    }, {
-      safeStart: false,
-      hardcore: false
-    })
-};
 export default function info(state, action){
   if (!state.info){
-    state = Object.assign({}, state, { info: defaultState });
+    state = Object.assign({}, state, {
+      info: {
+        reveals: [ 0 ],
+        options: location.hash
+          .slice(1)
+          .split(',')
+          .filter(e => e)
+          .reduce((state, key) => {
+            return Object.assign({}, state, {
+              [key]: true
+            });
+          }, {
+            safeStart: false,
+            hardcore: false
+          })
+      }
+    });
   }
+  const isHardcore = state.info.options.hardcore;
 
   switch (action.type){
     case REVEAL:
@@ -28,9 +30,15 @@ export default function info(state, action){
       const newInfo = action.positions.reduce((state, pos) => {
         const cell = cellAt(fields, pos.x, pos.y);
         if (cell.mine) {
-          return Object.assign({}, state, {
-            reveals: [ 0, ...state.reveals ]
-          });
+          if (isHardcore){
+            return Object.assign({}, state, {
+              isGameOver: true
+            });
+          } else {
+            return Object.assign({}, state, {
+              reveals: [ 0, ...state.reveals ]
+            });
+          }
         }
         return Object.assign({}, state, {
           reveals: [

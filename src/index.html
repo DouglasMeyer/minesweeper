@@ -40,11 +40,15 @@
         font-family: sans-serif;
         transform: translateY(-100%);
       }
-      .info:hover {
+      .info:hover, .app-is_game_over .info {
         transform: translateY(-3.75rem); /* top + 1 */
       }
       .info > * {
         padding-top: 0.5em;
+      }
+      .info a {
+        cursor: pointer;
+        text-decoration: underline;
       }
       .info_summary {
         text-align: right;
@@ -76,8 +80,10 @@
         font-weight: bold;
         font-family: sans-serif;
       }
-      a.cell { cursor: pointer; }
+      .cell { cursor: pointer; }
+      .app-is_game_over .cell { cursor: default; }
       .cell--revealed {
+        cursor: default;
         border: 1px solid #EEE;
         background: none;
       }

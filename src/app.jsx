@@ -4,14 +4,9 @@ import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
-import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe } from './actions';
+import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe, newGame } from './actions';
 
 export default class App extends Component {
-  componentDidMount(){
-    const { safeStart } = this.props.info.options;
-    if (safeStart) this.props.onRevealSafe();
-  }
-
   onWheel(e){
     this.props.onScroll({ dx: e.deltaX, dy: e.deltaY });
   }
@@ -40,11 +35,13 @@ export default class App extends Component {
     const {
       fields, position, info,
       onReveal, onFlag, onUnflag,
-      onKeyDown, onKeyUp
+      onKeyDown, onKeyUp,
+      onRevealSafe, onNewGame
     } = this.props;
+    const { isGameOver } = info;
 
     return <div
-      className='app'
+      className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
       tabIndex={0}
       ref={ el => el && el.focus() }
       onKeyDown={ e => onKeyDown(e.nativeEvent.code) }
@@ -54,7 +51,11 @@ export default class App extends Component {
       onTouchMove={ this.onTouchMove.bind(this) }
       onTouchEnd={ this.onTouchEnd.bind(this) }
     >
-      <Info { ...info }></Info>
+      <Info
+        { ...info }
+        onNewGame={ onNewGame }
+        onRevealSafe={ onRevealSafe }
+      ></Info>
       <Fields
         fields={ fields }
         position={ position }
@@ -79,6 +80,7 @@ export default connect(
     onKeyDown: k => dispatch(keyDown(k)),
     onKeyUp: k => dispatch(keyUp(k)),
     onScroll: posD => dispatch(scroll(posD)),
-    onRevealSafe: () => dispatch(revealSafe())
+    onRevealSafe: () => dispatch(revealSafe()),
+    onNewGame: () => dispatch(newGame())
   })
 )(App);
