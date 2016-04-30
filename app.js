@@ -20822,25 +20822,33 @@ arguments[4][42][0].apply(exports,arguments)
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MOVE = exports.UNFLAG = exports.FLAG = exports.REVEAL = undefined;
+exports.NEW_GAME = exports.MOVE = exports.UNFLAG = exports.FLAG = exports.REVEAL = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /* eslint-env browser */
+
+
 exports.reveal = reveal;
+exports.revealSafe = revealSafe;
 exports.flag = flag;
 exports.unflag = unflag;
 exports.keyDown = keyDown;
 exports.keyUp = keyUp;
 exports.scroll = scroll;
+exports.newGame = newGame;
 
 var _helpers = require('./helpers');
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 /*
  * action types
  */
 
-var REVEAL = exports.REVEAL = 'REVEAL'; /* eslint-env browser */
-
+var REVEAL = exports.REVEAL = 'REVEAL';
 var FLAG = exports.FLAG = 'FLAG';
 var UNFLAG = exports.UNFLAG = 'UNFLAG';
 var MOVE = exports.MOVE = 'MOVE';
+var NEW_GAME = exports.NEW_GAME = 'NEW_GAME';
 
 /*
  * action creators
@@ -20861,7 +20869,14 @@ function reveal() {
 
     function doReveal() {
       revealing = false;
-      var fields = getState().fields;
+      var state = getState();
+      var fields = state.fields;
+      var isGameOver = state.info.isGameOver;
+
+      if (isGameOver) {
+        positionsToReveal = [];
+        return;
+      };
       positionsToReveal = positionsToReveal.filter(function (p) {
         var cell = (0, _helpers.cellAt)(fields, p.x, p.y);
         return cell && !cell.revealed;
@@ -20882,6 +20897,43 @@ function reveal() {
       }
     }
     requestAnimationFrame(doReveal);
+  };
+}
+
+function revealSafe() {
+  return function (dispatch, getState) {
+    var fields = getState().fields;
+    var center = { x: _helpers.fieldSize / 2, y: _helpers.fieldSize / 2 };
+    var cellsToCheck = [center];
+    /* eslint-disable */
+
+    var _loop = function _loop(i, cellPos) {
+      /* eslint-enable */
+      var cell = (0, _helpers.cellAt)(fields, cellPos.x, cellPos.y);
+      if (!cell.mine && !cell.neighboringMineCount) {
+        reveal(cellPos)(dispatch, getState);
+        return {
+          v: void 0
+        };
+      }
+      cellsToCheck.push.apply(cellsToCheck, _toConsumableArray(_helpers.nineSquare.map(function (_ref) {
+        var x = _ref.x;
+        var y = _ref.y;
+        return { x: cellPos.x + x, y: cellPos.y + y };
+      }).filter(function (_ref2) {
+        var x = _ref2.x;
+        var y = _ref2.y;
+        return !cellsToCheck.some(function (p) {
+          return p.x === x && p.y === y;
+        });
+      })));
+    };
+
+    for (var i = 0, cellPos; cellPos = cellsToCheck[i]; i++) {
+      var _ret = _loop(i, cellPos);
+
+      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+    }
   };
 }
 
@@ -20946,11 +20998,15 @@ function keyUp(key) {
   return function (_) {};
 }
 
-function scroll(_ref) {
-  var dx = _ref.dx;
-  var dy = _ref.dy;
+function scroll(_ref3) {
+  var dx = _ref3.dx;
+  var dy = _ref3.dy;
 
   return { type: MOVE, dx: dx, dy: dy };
+}
+
+function newGame() {
+  return { type: NEW_GAME };
 }
 
 },{"./helpers":198}],194:[function(require,module,exports){
@@ -20959,6 +21015,8 @@ function scroll(_ref) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -21044,12 +21102,15 @@ var App = function (_Component) {
       var onUnflag = _props.onUnflag;
       var _onKeyDown = _props.onKeyDown;
       var _onKeyUp = _props.onKeyUp;
+      var onRevealSafe = _props.onRevealSafe;
+      var onNewGame = _props.onNewGame;
+      var isGameOver = info.isGameOver;
 
 
       return _react2.default.createElement(
         'div',
         {
-          className: 'app',
+          className: 'app' + (isGameOver ? ' app-is_game_over' : ''),
           tabIndex: 0,
           ref: function ref(el) {
             return el && el.focus();
@@ -21065,7 +21126,10 @@ var App = function (_Component) {
           onTouchMove: this.onTouchMove.bind(this),
           onTouchEnd: this.onTouchEnd.bind(this)
         },
-        _react2.default.createElement(_info2.default, { info: info }),
+        _react2.default.createElement(_info2.default, _extends({}, info, {
+          onNewGame: onNewGame,
+          onRevealSafe: onRevealSafe
+        })),
         _react2.default.createElement(_fields2.default, {
           fields: fields,
           position: position,
@@ -21106,6 +21170,12 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     },
     onScroll: function onScroll(posD) {
       return dispatch((0, _actions.scroll)(posD));
+    },
+    onRevealSafe: function onRevealSafe() {
+      return dispatch((0, _actions.revealSafe)());
+    },
+    onNewGame: function onNewGame() {
+      return dispatch((0, _actions.newGame)());
     }
   };
 })(App);
@@ -21397,15 +21467,19 @@ var Fields = function (_Component) {
       var size = this.state.size;
 
       var fieldSize = 10; // FIXME: Magic number
+      var top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2;
+      var left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2;
 
       return _react2.default.createElement(
         'div',
         {
+          className: 'fields',
           style: {
             position: 'absolute',
             willChange: 'top, left',
-            top: size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2,
-            left: size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2
+            top: top,
+            left: left,
+            transformOrigin: size.width / 2 - left + 'px ' + (size.height / 2 - top) + 'px'
           }
         },
         fields.map(function (field) {
@@ -21465,8 +21539,78 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /* eslint-env browser */
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary|History)$" }]*/
 
+
+function RevealSummary(_ref) {
+  var reveals = _ref.reveals;
+
+  var current = reveals[0];
+  var best = Math.max.apply(null, reveals);
+  var total = reveals.reduce(function (s, r) {
+    return s + r;
+  });
+  var summaryExtra = _react2.default.createElement(
+    'small',
+    null,
+    '  < ',
+    best,
+    '  = ',
+    total
+  );
+
+  return _react2.default.createElement(
+    'div',
+    { className: 'info_summary' },
+    _react2.default.createElement(
+      'small',
+      null,
+      'current',
+      reveals.length > 1 ? ' < best = total' : false
+    ),
+    _react2.default.createElement(
+      'div',
+      null,
+      'Squares revealed: ',
+      current,
+      reveals.length > 1 ? summaryExtra : false
+    )
+  );
+}
+
+function History(_ref2) {
+  var reveals = _ref2.reveals;
+
+  if (reveals.length === 1) return null;
+
+  return _react2.default.createElement(
+    'div',
+    null,
+    'Previous runs:',
+    _react2.default.createElement(
+      'ol',
+      {
+        className: 'info_list',
+        onWheel: function onWheel(e) {
+          return e.stopPropagation();
+        },
+        ref: function ref(el) {
+          if (el) {
+            el.scrollTop = 999999;
+          }
+        }
+      },
+      reveals.slice(1).reverse().map(function (n, i) {
+        return _react2.default.createElement(
+          'li',
+          { key: i },
+          n
+        );
+      })
+    )
+  );
+}
 
 var Info = function (_Component) {
   _inherits(Info, _Component);
@@ -21481,53 +21625,115 @@ var Info = function (_Component) {
   }
 
   _createClass(Info, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.revealIfSafeStart();
+      this.setState(this.props.options);
+    }
+  }, {
+    key: 'toggleSafeStart',
+    value: function toggleSafeStart() {
+      var safeStart = this.state.safeStart;
+
+      this.setState({ safeStart: !safeStart }, this.updateHash);
+    }
+  }, {
+    key: 'toggleHardcore',
+    value: function toggleHardcore() {
+      var hardcore = this.state.hardcore;
+
+      this.setState({ hardcore: !hardcore }, this.updateHash);
+    }
+  }, {
+    key: 'updateHash',
+    value: function updateHash() {
+      var _this2 = this;
+
+      location.hash = Object.keys(this.state).filter(function (k) {
+        return _this2.state[k];
+      }).join(',');
+    }
+  }, {
+    key: 'onNewGame',
+    value: function onNewGame() {
+      this.props.onNewGame();
+      setTimeout(this.revealIfSafeStart.bind(this));
+    }
+  }, {
+    key: 'revealIfSafeStart',
+    value: function revealIfSafeStart() {
+      var onRevealSafe = this.props.onRevealSafe;
+      var safeStart = this.props.options.safeStart;
+
+
+      if (safeStart) onRevealSafe();
+    }
+  }, {
     key: 'render',
     value: function render() {
-      var info = this.props.info;
+      var _this3 = this;
 
-      var total = _react2.default.createElement(
-        'div',
+      if (!this.state) return null;
+      var _props = this.props;
+      var reveals = _props.reveals;
+      var options = _props.options;
+      var _state = this.state;
+      var safeStart = _state.safeStart;
+      var hardcore = _state.hardcore;
+
+      var optionsChanged = Object.keys(options).some(function (k) {
+        return options[k] !== _this3.state[k];
+      });
+      var newGame = _react2.default.createElement(
+        'small',
         null,
-        'Total cells revealed: ',
-        info.reduce(function (a, i) {
-          return a + i.reveals;
-        }, 0)
+        _react2.default.createElement(
+          'a',
+          { onClick: this.onNewGame.bind(this) },
+          'Start a new game'
+        ),
+        '.'
       );
-      var safely = _react2.default.createElement(
-        'div',
-        null,
-        'Cells safely revealed: ',
-        info[0].reveals
-      );
-      var history = _react2.default.createElement(
-        'ol',
-        {
-          className: 'info_list',
-          onWheel: function onWheel(e) {
-            return e.stopPropagation();
-          },
-          ref: function ref(el) {
-            if (el) {
-              el.scrollTop = 999999;
-            }
-          }
-        },
-        info.slice(1).reverse().map(function (_ref, i) {
-          var reveals = _ref.reveals;
-          return _react2.default.createElement(
-            'li',
-            { key: i },
-            reveals
-          );
-        })
-      );
+      if (optionsChanged) {
+        newGame = _react2.default.createElement(
+          'small',
+          null,
+          'To use these settings ',
+          _react2.default.createElement(
+            'a',
+            { onClick: this.onNewGame.bind(this) },
+            'start a new game'
+          ),
+          '.'
+        );
+      }
 
       return _react2.default.createElement(
         'div',
         { className: 'info' },
-        info.length > 1 ? history : false,
-        total,
-        info.length > 1 ? safely : false
+        _react2.default.createElement(RevealSummary, { reveals: reveals }),
+        _react2.default.createElement(History, { reveals: reveals }),
+        newGame,
+        _react2.default.createElement(
+          'div',
+          { style: {
+              display: 'flex',
+              justifyContent: 'space-around',
+              height: '1.5rem'
+            } },
+          _react2.default.createElement(
+            'label',
+            { className: 'option' },
+            _react2.default.createElement('input', { type: 'checkbox', checked: safeStart, onChange: this.toggleSafeStart.bind(this) }),
+            'Safe start'
+          ),
+          _react2.default.createElement(
+            'label',
+            { className: 'option' },
+            _react2.default.createElement('input', { type: 'checkbox', checked: hardcore, onChange: this.toggleHardcore.bind(this) }),
+            'Hardcore'
+          )
+        )
       );
     }
   }]);
@@ -21536,9 +21742,13 @@ var Info = function (_Component) {
 }(_react.Component);
 
 Info.propTypes = {
-  info: _react.PropTypes.arrayOf(_react.PropTypes.shape({
-    reveals: _react.PropTypes.number.isRequired
-  }).isRequired).isRequired
+  reveals: _react.PropTypes.arrayOf(_react.PropTypes.number.isRequired).isRequired,
+  options: _react.PropTypes.shape({
+    safeStart: _react.PropTypes.boolean,
+    hardcore: _react.PropTypes.boolean
+  }).isRequired,
+  onNewGame: _react.PropTypes.func.isRequired,
+  onRevealSafe: _react.PropTypes.func.isRequired
 };
 exports.default = Info;
 
@@ -21563,7 +21773,14 @@ function neighborIndexes(size, index) {
   });
 }
 
-var nineSquare = exports.nineSquare = [{ x: -1, y: -1 }, { x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 0 }, { x: 0, y: 0 }, { x: 1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
+var square = [-1, 0, 1].reduce(function (square, y) {
+  return square.concat([-1, 0, 1].map(function (x) {
+    return { x: x, y: y };
+  }));
+}, []);
+var nineSquare = exports.nineSquare = [4, 1, 2, 5, 8, 7, 6, 3, 0].map(function (i) {
+  return square[i];
+});
 
 function cellAt(fields, x, y) {
   var fx = Math.floor(x / fieldSize);
@@ -21628,20 +21845,21 @@ exports.default = field;
 
 var _actions = require('../actions');
 
+var _helpers = require('../helpers');
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var frameSize = 10; // FIXME: Magic number
 var mineFrequency = 0.2;
 var blankCells = [];
-for (var i = 0; i < frameSize * frameSize; i++) {
+for (var i = 0; i < _helpers.fieldSize * _helpers.fieldSize; i++) {
   blankCells.push(0);
 }function defaultState(_ref) {
   var x = _ref.x;
   var y = _ref.y;
 
   var position = {
-    x: Math.floor(x / frameSize),
-    y: Math.floor(y / frameSize)
+    x: Math.floor(x / _helpers.fieldSize),
+    y: Math.floor(y / _helpers.fieldSize)
   };
   var cells = blankCells.map(function () {
     return { mine: Math.random() < mineFrequency };
@@ -21661,7 +21879,7 @@ function revealCells(state, positions) {
     var x = _ref2.x;
     var y = _ref2.y;
 
-    var index = y * frameSize + x;
+    var index = y * _helpers.fieldSize + x;
     if (newState.cells[index].revealed) return newState;
     return updateCell(newState, index, {
       revealed: true,
@@ -21684,7 +21902,7 @@ function field(oldState, action) {
       var x = _action$positions$.x;
       var y = _action$positions$.y;
 
-      var index = y * frameSize + x;
+      var index = y * _helpers.fieldSize + x;
       return updateCell(state, index, {
         flagged: flagged
       });
@@ -21694,7 +21912,7 @@ function field(oldState, action) {
   }
 }
 
-},{"../actions":193}],201:[function(require,module,exports){
+},{"../actions":193,"../helpers":198}],201:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21714,7 +21932,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var frameSize = 10; // FIXME: Magic number
 function createNewNeighbors(fields, field) {
   return _helpers.nineSquare.map(function (p) {
     return { x: field.position.x + p.x, y: field.position.y + p.y };
@@ -21722,7 +21939,7 @@ function createNewNeighbors(fields, field) {
     var field = fields.find(function (f) {
       return f.position.x === p.x && f.position.y === p.y;
     });
-    if (!field) return (0, _field2.default)(undefined, { x: p.x * frameSize, y: p.y * frameSize });
+    if (!field) return (0, _field2.default)(undefined, { x: p.x * _helpers.fieldSize, y: p.y * _helpers.fieldSize });
   }).filter(function (e) {
     return e;
   });
@@ -21738,15 +21955,15 @@ function ensureFieldWithNeighbors(field, fields) {
     return f;
   });
   if (neighborFields.length !== 9) return field;
-  var plusCells = [neighborFields[0].cells[frameSize * frameSize - 1]].concat(_toConsumableArray(neighborFields[1].cells.slice(frameSize * (frameSize - 1), frameSize * frameSize)), [neighborFields[2].cells[frameSize * (frameSize - 1)]]);
-  for (var i = 0; i < frameSize; i++) {
-    plusCells = plusCells.concat([neighborFields[3].cells[frameSize * (i + 1) - 1]].concat(_toConsumableArray(field.cells.slice(frameSize * i, frameSize * (i + 1))), [neighborFields[5].cells[frameSize * i]]));
+  var plusCells = [neighborFields[8].cells[_helpers.fieldSize * _helpers.fieldSize - 1]].concat(_toConsumableArray(neighborFields[1].cells.slice(_helpers.fieldSize * (_helpers.fieldSize - 1), _helpers.fieldSize * _helpers.fieldSize)), [neighborFields[2].cells[_helpers.fieldSize * (_helpers.fieldSize - 1)]]);
+  for (var i = 0; i < _helpers.fieldSize; i++) {
+    plusCells = plusCells.concat([neighborFields[7].cells[_helpers.fieldSize * (i + 1) - 1]].concat(_toConsumableArray(field.cells.slice(_helpers.fieldSize * i, _helpers.fieldSize * (i + 1))), [neighborFields[3].cells[_helpers.fieldSize * i]]));
   }
-  plusCells = plusCells.concat([neighborFields[6].cells[frameSize - 1]].concat(_toConsumableArray(neighborFields[7].cells.slice(0, frameSize)), [neighborFields[8].cells[0]]));
+  plusCells = plusCells.concat([neighborFields[6].cells[_helpers.fieldSize - 1]].concat(_toConsumableArray(neighborFields[5].cells.slice(0, _helpers.fieldSize)), [neighborFields[4].cells[0]]));
   return Object.assign({}, field, {
     loaded: true,
     cells: plusCells.map(function (cell, cellIndex) {
-      var cellNeighborIndexes = (0, _helpers.neighborIndexes)(frameSize + 2, cellIndex);
+      var cellNeighborIndexes = (0, _helpers.neighborIndexes)(_helpers.fieldSize + 2, cellIndex);
       if (cellNeighborIndexes.length !== 8) return;
 
       return Object.assign(cell, {
@@ -21763,7 +21980,9 @@ function ensureFieldWithNeighbors(field, fields) {
 function defaultState() {
   return _helpers.nineSquare.reduce(function (fields, position) {
     return fields.concat(createNewNeighbors(fields, { position: position }));
-  }, []);
+  }, []).map(function (field, _i, fields) {
+    return ensureFieldWithNeighbors(field, fields);
+  });
 }
 
 function fields(oldState, action) {
@@ -21773,14 +21992,14 @@ function fields(oldState, action) {
     case _actions.FLAG:
     case _actions.UNFLAG:
       var positionsByField = action.positions.reduce(function (acc, position) {
-        var fx = Math.floor(position.x / frameSize);
-        var fy = Math.floor(position.y / frameSize);
+        var fx = Math.floor(position.x / _helpers.fieldSize);
+        var fy = Math.floor(position.y / _helpers.fieldSize);
         var field = state.find(function (field) {
           return field.position.x === fx && field.position.y === fy;
         });
         if (!acc.has(field)) acc.set(field, []);
         var positions = acc.get(field);
-        positions.push({ x: position.x - fx * frameSize, y: position.y - fy * frameSize });
+        positions.push({ x: position.x - fx * _helpers.fieldSize, y: position.y - fy * _helpers.fieldSize });
         acc.set(field, positions);
         return acc;
       }, new Map());
@@ -21812,8 +22031,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = reducer;
 
-var _redux = require('redux');
-
 var _fields = require('./fields');
 
 var _fields2 = _interopRequireDefault(_fields);
@@ -21826,24 +22043,37 @@ var _info = require('./info');
 
 var _info2 = _interopRequireDefault(_info);
 
+var _actions = require('../actions');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var combinedReducers = (0, _redux.combineReducers)({
-  fields: _fields2.default, tracking: _tracking2.default,
-  info: function info() {
-    var s = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-    return s;
-  }
-});
-
+// Reducers
 function reducer() {
   var state = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
   var action = arguments[1];
 
-  return combinedReducers((0, _info2.default)(state, action), action);
-};
+  var newState = state;
+  if (action.type === _actions.NEW_GAME) newState = {};
+  var isGameOver = newState.info && newState.info.isGameOver;
 
-},{"./fields":201,"./info":203,"./tracking":204,"redux":187}],203:[function(require,module,exports){
+  if (!isGameOver) {
+    var newFieldsState = (0, _fields2.default)(newState.fields, action);
+    if (newFieldsState !== newState.fields) {
+      newState = Object.assign({}, newState, { fields: newFieldsState });
+    }
+  }
+
+  var newTrackingState = (0, _tracking2.default)(newState.tracking, action);
+  if (newTrackingState !== newState.tracking) {
+    newState = Object.assign({}, newState, { tracking: newTrackingState });
+  }
+
+  if (!isGameOver) newState = (0, _info2.default)(newState, action);
+
+  return newState;
+}
+
+},{"../actions":193,"./fields":201,"./info":203,"./tracking":204}],203:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -21857,21 +22087,46 @@ var _helpers = require('../helpers');
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var defaultState = [{ reveals: 0 }];
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; } /* eslint-env browser */
+
+
 function info(state, action) {
   if (!state.info) {
-    state = Object.assign({}, state, { info: defaultState });
+    state = Object.assign({}, state, {
+      info: {
+        reveals: [0],
+        options: location.hash.slice(1).split(',').filter(function (e) {
+          return e;
+        }).reduce(function (state, key) {
+          return Object.assign({}, state, _defineProperty({}, key, true));
+        }, {
+          safeStart: false,
+          hardcore: false
+        })
+      }
+    });
   }
+  var isHardcore = state.info.options.hardcore;
 
   switch (action.type) {
     case _actions.REVEAL:
       var fields = state.fields;
       var newInfo = action.positions.reduce(function (state, pos) {
         var cell = (0, _helpers.cellAt)(fields, pos.x, pos.y);
-        if (cell.mine) return [{ reveals: 0 }].concat(_toConsumableArray(state));
-        return [Object.assign({}, state[0], {
-          reveals: state[0].reveals + 1
-        })].concat(_toConsumableArray(state.slice(1)));
+        if (cell.mine) {
+          if (isHardcore) {
+            return Object.assign({}, state, {
+              isGameOver: true
+            });
+          } else {
+            return Object.assign({}, state, {
+              reveals: [0].concat(_toConsumableArray(state.reveals))
+            });
+          }
+        }
+        return Object.assign({}, state, {
+          reveals: [state.reveals[0] + 1].concat(_toConsumableArray(state.reveals.slice(1)))
+        });
       }, state.info);
       return Object.assign({}, state, { info: newInfo });
 

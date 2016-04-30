@@ -25,40 +25,63 @@
         outline: none;
       }
       .info {
+        display: flex;
+        flex-direction: column-reverse;
         position: absolute;
-        z-index: 1;
-        top: 0.5rem;
-        left: 0.5rem;
-        padding: 0.5rem;
+        z-index: 2;
+        left: 1rem;
+        top: 2.75rem;
+        transition: all 0.2s;
+        padding: 1rem 0.5rem 0.5rem;
+        border-radius: 0.5rem;
         background-color: rgba(0,0,0, 0.6);
         color: white;
         font-weight: bold;
         font-family: sans-serif;
+        transform: translateY(-100%);
+      }
+      .info:hover, .app-is_game_over .info {
+        transform: translateY(-3.75rem); /* top + 1 */
+      }
+      .info > * {
+        padding-top: 0.5em;
+      }
+      .info a {
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .info_summary {
+        text-align: right;
+      }
+      .info small {
+        font-weight: normal;
       }
       .info_list {
-        margin: 1em 0 0;
+        margin: 0;
         padding-left: 2rem;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 1s;
-      }
-      .info_list:hover {
         max-height: 100px;
         overflow-y: auto;
+        border: 1px solid #888;
       }
-      .info_list:before {
-        position: absolute;
-        top: 0.5rem;
-        left: 0;
-        width: 100%;
-        display: block;
-        content: '^ more ^';
-        opacity: 0.4;
-        text-align: center;
-        font-size: 0.8em;
+      .option {
+        font-size: 0.8rem;
+        font-weight: normal;
       }
-      .info_list:hover:before {
-        content: 'v less v';
+      .app-is_game_over .fields {
+        animation: 0.5s quake ease-out;
+        transition: transform 1s;
+      }
+      @keyframes quake {
+        0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
+        10% { transform: translate(-1.5px,  1.5px) rotate( 2.5deg); }
+        20% { transform: translate( 1.5px, -1.5px) rotate(-2.5deg); }
+        30% { transform: translate(-1.0px,  1.0px) rotate( 1.5deg); }
+        40% { transform: translate( 1.0px, -1.0px) rotate(-1.5deg); }
+        50% { transform: translate(-0.5px,  0.5px) rotate( 1.0deg); }
+        60% { transform: translate( 0.5px, -0.5px) rotate(-1.0deg); }
+        70% { transform: translate(-0.2px,  0.2px) rotate( 0.5deg); }
+        80% { transform: translate( 0.2px, -0.2px) rotate(-0.5deg); }
+        90% { transform: translate(-0.2px,  0.2px) rotate( 0.5deg); }
       }
       .cell {
         position: relative;
@@ -73,8 +96,10 @@
         font-weight: bold;
         font-family: sans-serif;
       }
-      a.cell { cursor: pointer; }
+      .cell { cursor: pointer; }
+      .app-is_game_over .cell { cursor: default; }
       .cell--revealed {
+        cursor: default;
         border: 1px solid #EEE;
         background: none;
       }
