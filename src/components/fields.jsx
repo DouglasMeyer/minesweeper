@@ -3,6 +3,7 @@ import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 
 import Field from './field.jsx';
+import { fieldSize } from '../helpers';
 
 const _onResize = Symbol('onResize');
 class Fields extends Component {
@@ -37,9 +38,17 @@ class Fields extends Component {
   render(){
     const { fields, position, onReveal, onFlag, onUnflag } = this.props;
     const { size } = this.state;
-    const fieldSize = 10; // FIXME: Magic number
     const top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2;
     const left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2;
+    // FIXME: thar be magic numbers:
+    const minX = Math.floor((position.x - size.width / 2) / (fieldSize * 16 * 2));
+    const maxX = Math.ceil((position.x + size.width / 2) / (fieldSize * 16 * 2));
+    const minY = Math.floor((position.y - size.height / 2) / (fieldSize * 16 * 2));
+    const maxY = Math.ceil((position.y + size.height / 2) / (fieldSize * 16 * 2));
+    const visibleFields = fields.filter(field =>
+      field.position.x >= minX && field.position.x <= maxX &&
+      field.position.y >= minY && field.position.y <= maxY
+    );
 
     return <div
       className='fields'
@@ -51,11 +60,11 @@ class Fields extends Component {
         transformOrigin: `${size.width / 2 - left}px ${size.height / 2 - top}px`
       }}
     >
-      { fields.map(field => {
+      { visibleFields.map(field => {
         return <Field
           key={`${field.position.x}-${field.position.y}`}
           {...field}
-          size={10 /* FIXME: magic number */}
+          size={fieldSize /* FIXME: magic number */}
           onReveal={ onReveal }
           onFlag={ onFlag }
           onUnflag={ onUnflag }
