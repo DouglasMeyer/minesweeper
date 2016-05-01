@@ -21405,6 +21405,8 @@ var _field = require('./field.jsx');
 
 var _field2 = _interopRequireDefault(_field);
 
+var _helpers = require('../helpers');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -21464,11 +21466,20 @@ var Fields = function (_Component) {
       var onReveal = _props.onReveal;
       var onFlag = _props.onFlag;
       var onUnflag = _props.onUnflag;
+
+      console.log(295, fields.length);
       var size = this.state.size;
 
-      var fieldSize = 10; // FIXME: Magic number
-      var top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2;
-      var left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2;
+      var top = size.height / 2 - position.y - (_helpers.fieldSize /* FIXME: magic number */ / 2 + 0.5) * 16 * 2;
+      var left = size.width / 2 - position.x - (_helpers.fieldSize / 2 + 0.5) * 16 * 2;
+      // FIXME: thar be magic numbers:
+      var minX = Math.floor((position.x - size.width / 2) / (_helpers.fieldSize * 16 * 2));
+      var maxX = Math.ceil((position.x + size.width / 2) / (_helpers.fieldSize * 16 * 2));
+      var minY = Math.floor((position.y - size.height / 2) / (_helpers.fieldSize * 16 * 2));
+      var maxY = Math.ceil((position.y + size.height / 2) / (_helpers.fieldSize * 16 * 2));
+      var visibleFields = fields.filter(function (field) {
+        return field.position.x >= minX && field.position.x <= maxX && field.position.y >= minY && field.position.y <= maxY;
+      });
 
       return _react2.default.createElement(
         'div',
@@ -21482,11 +21493,11 @@ var Fields = function (_Component) {
             transformOrigin: size.width / 2 - left + 'px ' + (size.height / 2 - top) + 'px'
           }
         },
-        fields.map(function (field) {
+        visibleFields.map(function (field) {
           return _react2.default.createElement(_field2.default, _extends({
             key: field.position.x + '-' + field.position.y
           }, field, {
-            size: 10 /* FIXME: magic number */,
+            size: _helpers.fieldSize,
             onReveal: onReveal,
             onFlag: onFlag,
             onUnflag: onUnflag
@@ -21516,7 +21527,7 @@ Fields.propTypes = {
 
 exports.default = Fields;
 
-},{"./field.jsx":195,"react":180,"react-addons-pure-render-mixin":31}],197:[function(require,module,exports){
+},{"../helpers":198,"./field.jsx":195,"react":180,"react-addons-pure-render-mixin":31}],197:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
