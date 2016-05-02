@@ -1,4 +1,5 @@
 /* eslint-env browser */
+/* global ga */
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary|History)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
@@ -71,6 +72,7 @@ class Info extends Component {
   }
 
   revealIfSafeStart(){
+    ga('send', 'event', 'Game', 'start', location.hash);
     const { onRevealSafe } = this.props;
     const { safeStart } = this.props.options;
 
