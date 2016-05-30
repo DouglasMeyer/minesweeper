@@ -105,11 +105,11 @@
         background: none;
       }
       .cell--flag:after {
-        content: "\2691";
-        font-size: 1.8rem;
-        width: 2rem;
-        line-height: 2rem;
-        text-align: center;
+        content: "";
+        display: inline-block;
+        background: url("data:image/svg+xml;charset=UTF-8,<svg viewBox=%220 0 30 30%22 version=%221.1%22 xmlns=%22http://www.w3.org/2000/svg%22><g stroke-width=%223%22 stroke-linecap=%22round%22><path d=%22M 8 6 L 20 12 L 8 18%22 stroke=%22red%22 fill=%22red%22 /><line x1=%228%22 y1=%226%22 x2=%228%22 y2=%2226%22 stroke=%22gray%22 /></g></svg>");
+        width: 30px;
+        height: 30px;
       }
       .cell--mine.cell--revealed:after {
         position: absolute;
@@ -135,11 +135,12 @@
       .cell--mine:before {
         position: absolute;
         top: 0; left: 0;
-        width: 2rem;
-        line-height: 2.2rem;
-        content: "\1f4a3";
-        font-size: 1.8rem;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+        content: "";
         font-weight: normal;
+        background: url("data:image/svg+xml;charset=UTF-8,<svg viewBox='0 0 30 30' version='1.1' xmlns='http://www.w3.org/2000/svg'><g stroke-width='3' stroke-linecap='round'><line x1='19' y1='11' x2='21' y2='9' stroke='gray' /><circle cx='12' cy='18' r='10' stroke='#333' fill='#333' /><path d='M 24 10 L 24 2 M 20 6 L 28 6' stroke-width='2' stroke-dasharray='1, 2.5' stroke='#FD0' fill='none' /></g></svg>");
       }
     </style>
   </head>
