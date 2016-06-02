@@ -1,4 +1,4 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }]*/
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }] */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
@@ -44,8 +44,8 @@ export default class App extends Component {
       className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
       tabIndex={0}
       ref={ el => el && el.focus() }
-      onKeyDown={ e => onKeyDown(e.nativeEvent.code) }
-      onKeyUp={ e => onKeyUp(e.nativeEvent.code) }
+      onKeyDown={ e => onKeyDown(e.nativeEvent.code || e.nativeEvent.key) }
+      onKeyUp={ e => onKeyUp(e.nativeEvent.code || e.nativeEvent.key) }
       onWheel={ this.onWheel.bind(this) }
       onTouchStart={ this.onTouchStart.bind(this) }
       onTouchMove={ this.onTouchMove.bind(this) }

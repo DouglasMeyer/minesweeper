@@ -15,6 +15,20 @@ const store = createStore(
   applyMiddleware(thunk)
 );
 
+if (!window.requestAnimationFrame){
+  window.requestAnimationFrame = function(cb){
+    setTimeout(function(){
+      cb(performance.now());
+    }, 1);
+  };
+}
+
+if (!performance.now){
+  performance.now = function(){
+    return Date.now();
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function(){
   render((
       <Provider store={store}>

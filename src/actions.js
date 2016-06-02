@@ -94,9 +94,13 @@ const keyMap = {
   'KeyA': { y:  0, x: -1 },
   'KeyD': { y:  0, x:  1 },
   'ArrowUp':    { y: -1, x:  0 },
+  'Up':         { y: -1, x:  0 },
   'ArrowDown':  { y:  1, x:  0 },
+  'Down':       { y:  1, x:  0 },
   'ArrowLeft':  { y:  0, x: -1 },
-  'ArrowRight': { y:  0, x:  1 }
+  'Left':       { y:  0, x: -1 },
+  'ArrowRight': { y:  0, x:  1 },
+  'Right':      { y:  0, x:  1 }
 };
 const downedKeys = [];
 let moving = false;
