@@ -1,7 +1,8 @@
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Minesweeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <style>
       * { box-sizing: border-box; }
       html, body, #container, .app {
@@ -40,9 +41,11 @@
         font-weight: bold;
         font-family: sans-serif;
         transform: translateY(-100%);
+        -ms-transform: translateY(-100%);
       }
       .info:hover, .app-is_game_over .info {
         transform: translateY(-3.75rem); /* top + 1 */
+        -ms-transform: translateY(-3.75rem); /* top + 1 */
       }
       .info > * {
         padding-top: 0.5em;
@@ -105,11 +108,11 @@
         background: none;
       }
       .cell--flag:after {
-        content: "\2691";
-        font-size: 1.8rem;
-        width: 2rem;
-        line-height: 2rem;
-        text-align: center;
+        content: "";
+        display: inline-block;
+        background: url("flag.svg");
+        width: 30px;
+        height: 30px;
       }
       .cell--mine.cell--revealed:after {
         position: absolute;
@@ -135,17 +138,19 @@
       .cell--mine:before {
         position: absolute;
         top: 0; left: 0;
-        width: 2rem;
-        line-height: 2.2rem;
-        content: "\1f4a3";
-        font-size: 1.8rem;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+        content: "";
         font-weight: normal;
+        background: url("bomb.svg");
       }
     </style>
   </head>
   <body>
     <div id="container"></div>
 
+    <script src="polyfill.min.js"></script>
     <script src="app.js"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
