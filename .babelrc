@@ -1,4 +1,4 @@
 {
-  "plugins": [ 'transform-es3-member-expression-literals', 'transform-es3-property-literals', 'transform-runtime' ],
+  "plugins": [ 'transform-es3-member-expression-literals', 'transform-es3-property-literals' ],
   "presets": [ 'react', 'es2015' ]
 }
