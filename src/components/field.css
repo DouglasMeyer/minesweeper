@@ -1,0 +1,58 @@
+.cell {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  line-height: 2rem;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #AAA;
+  background: linear-gradient(#E3E3E3, #FFF);
+  font-weight: bold;
+  font-family: sans-serif;
+}
+.cell { cursor: pointer; }
+.app-is_game_over .cell { cursor: default; }
+.cell--revealed {
+  cursor: default;
+  border: 1px solid #EEE;
+  background: none;
+}
+.cell--flag:after {
+  content: "";
+  display: inline-block;
+  background: url("../flag.svg");
+  width: 30px;
+  height: 30px;
+}
+.cell--mine.cell--revealed:after {
+  position: absolute;
+  z-index: 1;
+  top: 0; left: 0;
+  content: "\2601";
+  font-size: 2rem;
+  animation: 0.3s explode;
+  color: #AAA;
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes explode {
+  from {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+.cell--mine:before {
+  position: absolute;
+  top: 0; left: 0;
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  content: "";
+  font-weight: normal;
+  background: url("../bomb.svg");
+}

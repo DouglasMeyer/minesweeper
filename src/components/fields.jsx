@@ -4,6 +4,7 @@ import PureRenderMixin from 'react-addons-pure-render-mixin';
 
 import Field from './field.jsx';
 import { fieldSize } from '../helpers';
+require('./fields.css');
 
 const _onResize = Symbol('onResize');
 class Fields extends Component {

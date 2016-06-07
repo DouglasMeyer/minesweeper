@@ -3,6 +3,7 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary|History)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
+require('./info.css');
 
 function RevealSummary({ reveals }){
   const current = reveals[0];

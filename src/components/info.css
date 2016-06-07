@@ -1,0 +1,43 @@
+.info {
+  display: flex;
+  flex-direction: column-reverse;
+  position: absolute;
+  z-index: 2;
+  left: 1rem;
+  top: 2.75rem;
+  transition: all 0.2s;
+  padding: 1rem 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(0,0,0, 0.6);
+  color: white;
+  font-weight: bold;
+  font-family: sans-serif;
+  transform: translateY(-100%);
+}
+.info:hover, .app-is_game_over .info {
+  transform: translateY(-3.75rem); /* top + 1 */
+}
+.info > * {
+  padding-top: 0.5em;
+}
+.info a {
+  cursor: pointer;
+  text-decoration: underline;
+}
+.info_summary {
+  text-align: right;
+}
+.info small {
+  font-weight: normal;
+}
+.info_list {
+  margin: 0;
+  padding-left: 2rem;
+  max-height: 100px;
+  overflow-y: auto;
+  border: 1px solid #888;
+}
+.option {
+  font-size: 0.8rem;
+  font-weight: normal;
+}

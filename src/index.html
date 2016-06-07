@@ -3,6 +3,7 @@
     <title>Minesweeper</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="index.css">
     <style>
       * { box-sizing: border-box; }
       html, body, #container, .app {
@@ -25,125 +26,6 @@
 
       .app {
         outline: none;
-      }
-      .info {
-        display: flex;
-        flex-direction: column-reverse;
-        position: absolute;
-        z-index: 2;
-        left: 1rem;
-        top: 2.75rem;
-        transition: all 0.2s;
-        padding: 1rem 0.5rem 0.5rem;
-        border-radius: 0.5rem;
-        background-color: rgba(0,0,0, 0.6);
-        color: white;
-        font-weight: bold;
-        font-family: sans-serif;
-        transform: translateY(-100%);
-        -ms-transform: translateY(-100%);
-      }
-      .info:hover, .app-is_game_over .info {
-        transform: translateY(-3.75rem); /* top + 1 */
-        -ms-transform: translateY(-3.75rem); /* top + 1 */
-      }
-      .info > * {
-        padding-top: 0.5em;
-      }
-      .info a {
-        cursor: pointer;
-        text-decoration: underline;
-      }
-      .info_summary {
-        text-align: right;
-      }
-      .info small {
-        font-weight: normal;
-      }
-      .info_list {
-        margin: 0;
-        padding-left: 2rem;
-        max-height: 100px;
-        overflow-y: auto;
-        border: 1px solid #888;
-      }
-      .option {
-        font-size: 0.8rem;
-        font-weight: normal;
-      }
-      .app-is_game_over .fields {
-        animation: 0.5s quake ease-out;
-        transition: transform 1s;
-      }
-      @keyframes quake {
-        0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
-        10% { transform: translate(-1.5px,  1.5px) rotate( 2.5deg); }
-        20% { transform: translate( 1.5px, -1.5px) rotate(-2.5deg); }
-        30% { transform: translate(-1.0px,  1.0px) rotate( 1.5deg); }
-        40% { transform: translate( 1.0px, -1.0px) rotate(-1.5deg); }
-        50% { transform: translate(-0.5px,  0.5px) rotate( 1.0deg); }
-        60% { transform: translate( 0.5px, -0.5px) rotate(-1.0deg); }
-        70% { transform: translate(-0.2px,  0.2px) rotate( 0.5deg); }
-        80% { transform: translate( 0.2px, -0.2px) rotate(-0.5deg); }
-        90% { transform: translate(-0.2px,  0.2px) rotate( 0.5deg); }
-      }
-      .cell {
-        position: relative;
-        display: inline-block;
-        vertical-align: middle;
-        text-align: center;
-        line-height: 2rem;
-        width: 2rem;
-        height: 2rem;
-        border: 1px solid #AAA;
-        background: linear-gradient(#E3E3E3, #FFF);
-        font-weight: bold;
-        font-family: sans-serif;
-      }
-      .cell { cursor: pointer; }
-      .app-is_game_over .cell { cursor: default; }
-      .cell--revealed {
-        cursor: default;
-        border: 1px solid #EEE;
-        background: none;
-      }
-      .cell--flag:after {
-        content: "";
-        display: inline-block;
-        background: url("flag.svg");
-        width: 30px;
-        height: 30px;
-      }
-      .cell--mine.cell--revealed:after {
-        position: absolute;
-        z-index: 1;
-        top: 0; left: 0;
-        content: "\2601";
-        font-size: 2rem;
-        animation: 0.3s explode;
-        color: #AAA;
-        opacity: 0;
-        pointer-events: none;
-      }
-      @keyframes explode {
-        from {
-          transform: scale(0.8);
-          opacity: 0.8;
-        }
-        to {
-          transform: scale(3);
-          opacity: 0;
-        }
-      }
-      .cell--mine:before {
-        position: absolute;
-        top: 0; left: 0;
-        width: 30px;
-        height: 30px;
-        display: inline-block;
-        content: "";
-        font-weight: normal;
-        background: url("bomb.svg");
       }
     </style>
   </head>

@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
+require('./field.css');
 
 class Cell extends Component {
   constructor(props){
