@@ -5,25 +5,35 @@ import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 require('./info.css');
 
-function RevealSummary({ reveals }){
+function RevealSummary({ bestHardcore, reveals }){
   const current = reveals[0];
-  const best = Math.max.apply(null, reveals);
+  const bestReveal = Math.max.apply(null, reveals);
   const total = reveals.reduce((s, r) => s + r);
   const summaryExtra = <small>
     &nbsp;
-    &lt; { best }&nbsp;&nbsp;= { total }
+    &lt; { bestHardcore || bestReveal }
+    { bestHardcore ? false : ' = '+total }
   </small>;
 
+  let label = 'current';
+  if (bestHardcore) {
+    label += ' < best';
+  } else if (reveals.length > 1) {
+    label += ' < best = total';
+  }
+
   return <div className='info_summary'>
-    <small>
-      current{ reveals.length > 1 ? ' < best = total' : false }
-    </small>
+    <small>{ label }</small>
     <div>
       Squares revealed: { current }
-      { reveals.length > 1 ? summaryExtra : false }
+      { bestHardcore || reveals.length > 1 ? summaryExtra : false }
     </div>
   </div>;
 }
+RevealSummary.propTypes = {
+  bestHardcore: PropTypes.number,
+  reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired
+};
 
 function History({ reveals }){
   if (reveals.length === 1) return null;
@@ -82,7 +92,7 @@ class Info extends Component {
 
   render(){
     if (!this.state) return null;
-    const { reveals, options } = this.props;
+    const { bestHardcore, reveals, options } = this.props;
     const { safeStart, hardcore } = this.state;
     const optionsChanged = Object.keys(options).some(k => options[k] !== this.state[k]);
     let newGame = <small>
@@ -97,7 +107,7 @@ class Info extends Component {
     }
 
     return <div className='info'>
-      <RevealSummary reveals={reveals}></RevealSummary>
+      <RevealSummary reveals={reveals} bestHardcore={hardcore ? bestHardcore : null}></RevealSummary>
       <History reveals={reveals}></History>
       { newGame }
       <div style={{
@@ -113,6 +123,7 @@ class Info extends Component {
 }
 
 Info.propTypes = {
+  bestHardcore: PropTypes.number,
   reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   options: PropTypes.shape({
     safeStart: PropTypes.boolean,
