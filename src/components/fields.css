@@ -1,4 +1,8 @@
-.app-is_game_over .fields {
+.fields {
+  font-size: 24px;
+}
+.app-is_game_over {
+  will-change: transform;
   animation: 0.5s quake ease-out;
   transition: transform 1s;
 }

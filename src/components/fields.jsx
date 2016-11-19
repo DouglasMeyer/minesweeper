@@ -39,13 +39,14 @@ class Fields extends Component {
   render(){
     const { fields, position, onReveal, onFlag, onUnflag } = this.props;
     const { size } = this.state;
-    const top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * 16 * 2;
-    const left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * 16 * 2;
+    const scale = 24;
+    const top = size.height / 2 - position.y - (fieldSize / 2 + 0.5) * scale * 2;
+    const left = size.width / 2 - position.x - (fieldSize / 2 + 0.5) * scale * 2;
     // FIXME: thar be magic numbers:
-    const minX = Math.floor((position.x - size.width / 2) / (fieldSize * 16 * 2));
-    const maxX = Math.ceil((position.x + size.width / 2) / (fieldSize * 16 * 2));
-    const minY = Math.floor((position.y - size.height / 2) / (fieldSize * 16 * 2));
-    const maxY = Math.ceil((position.y + size.height / 2) / (fieldSize * 16 * 2));
+    const minX = Math.floor((position.x - size.width / 2) / (fieldSize * scale * 2));
+    const maxX = Math.ceil((position.x + size.width / 2) / (fieldSize * scale * 2));
+    const minY = Math.floor((position.y - size.height / 2) / (fieldSize * scale * 2));
+    const maxY = Math.ceil((position.y + size.height / 2) / (fieldSize * scale * 2));
     const visibleFields = fields.filter(field =>
       field.position.x >= minX && field.position.x <= maxX &&
       field.position.y >= minY && field.position.y <= maxY
@@ -55,10 +56,8 @@ class Fields extends Component {
       className='fields'
       style={{
         position: 'absolute',
-        willChange: 'top, left',
-        top,
-        left,
-        transformOrigin: `${size.width / 2 - left}px ${size.height / 2 - top}px`
+        willChange: 'transform, transform-origin',
+        transform: `translate(${left}px, ${top}px)`
       }}
     >
       { visibleFields.map(field => {

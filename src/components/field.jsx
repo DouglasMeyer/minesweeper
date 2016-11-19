@@ -79,8 +79,8 @@ class Field extends Component {
       style={{
         position: 'absolute',
         whiteSpace: 'nowrap',
-        top: position.y * size * 16 * 2,
-        left: position.x * size * 16 * 2
+        top: position.y * size * 2 + 'em',
+        left: position.x * size * 2 + 'em'
       }}
     >
       { cellsInRows.map((row, y) =>
