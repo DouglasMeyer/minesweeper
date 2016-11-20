@@ -51,6 +51,8 @@ Cell.cellColors = [
   /* eslint-enable */
 ].map(c => c.map(i => Math.floor(i * 255)));
 Cell.propTypes = {
+  x: PropTypes.number.isRequired,
+  y: PropTypes.number.isRequired,
   mine: PropTypes.bool,
   revealed: PropTypes.bool,
   flagged: PropTypes.bool,
@@ -106,6 +108,10 @@ Field.propTypes = {
     revealed: PropTypes.bool,
     flagged: PropTypes.bool
   }).isRequired).isRequired,
+  position: PropTypes.shape({
+    x: PropTypes.number.isRequired,
+    y: PropTypes.number.isRequired
+  }).isRequired,
   size: PropTypes.number.isRequired,
   onReveal: PropTypes.func.isRequired,
   onFlag: PropTypes.func.isRequired,
