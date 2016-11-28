@@ -1,17 +1,20 @@
 import { REVEAL, FLAG, UNFLAG } from '../actions';
 import { fieldSize } from '../helpers';
 
+import seedrandom from 'seedrandom';
+
 const mineFrequency = 0.2;
 const blankCells = [];
 for (let i = 0; i < fieldSize * fieldSize; i++) blankCells.push(0);
 
-function defaultState({ x, y }){
+function defaultState({ x, y }, seed){
   const position = {
     x: Math.floor(x / fieldSize),
     y: Math.floor(y / fieldSize)
   };
+  const random = seedrandom(`${seed}_${position.x}_${position.y}`);
   const cells = blankCells
-    .map(() => ({ mine: Math.random() < mineFrequency }));
+    .map(() => ({ mine: random() < mineFrequency }));
   return {
     position,
     cells
@@ -36,8 +39,8 @@ function revealCells(state, positions){
     });
   }, state);
 }
-export default function field(oldState, action){
-  const state = oldState || defaultState(action);
+export default function field(oldState, action, seed){
+  const state = oldState || defaultState(action, seed);
   let flagged = false;
 
   switch (action.type){

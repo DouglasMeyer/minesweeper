@@ -49,31 +49,69 @@ function History({ reveals }){
     </ol>
   </div>;
 }
+History.propTypes = {
+  reveals: PropTypes.array.isRequired
+};
 
 class Info extends Component {
   constructor(){
     super();
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
+    setTimeout(()=>{
+      this.setState({
+        options: this.props.options,
+        mapKey: this.props.mapKey
+      });
+    });
   }
 
   componentDidMount(){
     this.revealIfSafeStart();
-    this.setState(this.props.options);
   }
 
   toggleSafeStart(){
-    const { safeStart } = this.state;
-    this.setState({ safeStart: !safeStart }, this.updateHash);
+    const { options } = this.state;
+    const { safeStart } = options;
+    this.setState({
+      options: Object.assign({}, options, {
+        safeStart: !safeStart
+      })
+    }, this.updateHash);
   }
 
   toggleHardcore(){
-    const { hardcore } = this.state;
-    this.setState({ hardcore: !hardcore }, this.updateHash);
+    const { options } = this.state;
+    const { hardcore } = options;
+    this.setState({
+      options: Object.assign({}, options, {
+        hardcore: !hardcore
+      })
+    }, this.updateHash);
+  }
+
+  toggleFixedSeed(){
+    const { options, mapKey: currentMapKey } = this.state;
+    const { mapKey } = options;
+    this.setState({
+      options: Object.assign({}, options, {
+        mapKey: mapKey ? null : currentMapKey
+      })
+    }, this.updateHash);
+  }
+
+  updateMapKey(e){
+    const { options } = this.state;
+    this.setState({
+      options: Object.assign({}, options, {
+        mapKey: e.target.value
+      })
+    }, this.updateHash);
   }
 
   updateHash(){
     location.hash = Object.keys(this.state)
       .filter(k => this.state[k])
+      .map(k => this.state[k] === true ? k : `${k}=${this.state[k]}`)
       .join(',');
   }
 
@@ -92,8 +130,9 @@ class Info extends Component {
 
   render(){
     if (!this.state) return null;
-    const { bestHardcore, reveals, options } = this.props;
-    const { safeStart, hardcore } = this.state;
+    const { reveals, options, seed: currentMapKey } = this.props;
+    const { bestHardcore } = options;
+    const { safeStart, hardcore, mapKey } = this.state;
     const optionsChanged = Object.keys(options).some(k => options[k] !== this.state[k]);
     let newGame = <small>
       <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
@@ -117,6 +156,8 @@ class Info extends Component {
       }}>
         <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
         <label className='option'><input type='checkbox' checked={ hardcore } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
+        <label className='option'><input type='checkbox' checked={ mapKey } onChange={ this.toggleFixedSeed.bind(this) } />Use map key:&nbsp;</label>
+        <input disabled={ !mapKey } value={ mapKey || currentMapKey } onChange={ this.updateMapKey.bind(this) } />
       </div>
     </div>;
   }
@@ -129,6 +170,7 @@ Info.propTypes = {
     safeStart: PropTypes.boolean,
     hardcore: PropTypes.boolean
   }).isRequired,
+  seed: PropTypes.string.isRequired,
   onNewGame: PropTypes.func.isRequired,
   onRevealSafe: PropTypes.func.isRequired
 };

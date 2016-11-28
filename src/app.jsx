@@ -1,5 +1,5 @@
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Fields|Info)$" }] */
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
@@ -7,6 +7,26 @@ import Info from './components/info.jsx';
 import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe, newGame } from './actions';
 
 export default class App extends Component {
+  static get propTypes(){
+    const func = PropTypes.func.isRequired;
+    return {
+      fields: PropTypes.array.isRequired,
+      position: PropTypes.shape({
+        x: PropTypes.number.isRequired,
+        y: PropTypes.number.isRequired
+      }).isRequired,
+      info: PropTypes.object.isRequired,
+      onScroll: func,
+      onReveal: func,
+      onFlag: func,
+      onUnflag: func,
+      onKeyDown: func,
+      onKeyUp: func,
+      onRevealSafe: func,
+      onNewGame: func
+    };
+  }
+
   onWheel(e){
     this.props.onScroll({ dx: e.deltaX, dy: e.deltaY });
   }

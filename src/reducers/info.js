@@ -1,32 +1,33 @@
 /* eslint-env browser */
 import { REVEAL } from '../actions';
-import { cellAt } from '../helpers';
+import { cellAt, newSeed } from '../helpers';
 
 const bestHardcoreKey = 'minesweeper.bestHardcore';
 
-export default function info(state, action){
-  if (!state.info){
-    let bestHardcore = localStorage.getItem(bestHardcoreKey);
-    if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
-    state = Object.assign({}, state, {
-      info: {
-        reveals: [ 0 ],
-        bestHardcore,
-        options: location.hash
-          .slice(1)
-          .split(',')
-          .filter(e => e)
-          .reduce((state, key) => {
-            return Object.assign({}, state, {
-              [key]: true
-            });
-          }, {
-            safeStart: false,
-            hardcore: false
-          })
-      }
+export function init(){
+  let bestHardcore = localStorage.getItem(bestHardcoreKey);
+  if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
+  const hashOptions = location.hash
+    .slice(1)
+    .split(',')
+    .reduce((hash,str) => {
+      const [ key, value ] = str.split("=");
+      hash[key] = value === undefined ? true : value;
+      return hash;
+    }, {
+      safeStart: false,
+      hardcore: false
     });
-  }
+  const seed = hashOptions.mapKey || newSeed();
+  return {
+    reveals: [ 0 ],
+    bestHardcore,
+    seed,
+    options: hashOptions
+  };
+}
+
+export default function info(state, action){
   const isHardcore = state.info.options.hardcore;
 
   switch (action.type){

@@ -2,12 +2,14 @@ import { REVEAL, FLAG, UNFLAG } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
-function createNewNeighbors(fields, field){
+function createNewNeighbors(fields, field, seed){
   return nineSquare
   .map(p => ({ x: field.position.x + p.x, y: field.position.y + p.y }))
   .map(p => {
     const field = fields.find(f => f.position.x === p.x && f.position.y === p.y);
-    if (!field) return fieldReducer(undefined, { x: p.x * fieldSize, y: p.y * fieldSize });
+    if (!field) {
+      return fieldReducer(undefined, { x: p.x * fieldSize, y: p.y * fieldSize }, seed);
+    }
   })
   .filter(e => e);
 }
@@ -54,18 +56,17 @@ function ensureFieldWithNeighbors(field, fields){
   });
 }
 
-function defaultState(){
+export function init(seed){
   return nineSquare
     .reduce((fields, position) => {
       return fields.concat(
-        createNewNeighbors(fields, { position })
+        createNewNeighbors(fields, { position }, seed)
       );
     }, [])
     .map((field, _i, fields) => ensureFieldWithNeighbors(field, fields));
 }
 
-export default function fields(oldState, action){
-  const state = oldState || defaultState();
+export default function fields(state, action, seed){
   switch (action.type){
     case REVEAL:
     case FLAG:
@@ -83,7 +84,7 @@ export default function fields(oldState, action){
       const newState = Array.from(positionsByField.keys())
       .filter(f => !f.loaded)
       .reduce((fields, fieldToLoad) => {
-        return fields.concat(createNewNeighbors(fields, fieldToLoad));
+        return fields.concat(createNewNeighbors(fields, fieldToLoad, seed));
       }, state);
       return newState.map((field, _fieldIndex, fields) => {
         if (positionsByField.has(field)) {
