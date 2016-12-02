@@ -32,7 +32,7 @@ export function reveal(...positions){
       if (isGameOver){
         positionsToReveal = [];
         return;
-      };
+      }
       positionsToReveal = positionsToReveal.filter(p => {
         const cell = cellAt(fields, p.x, p.y);
         return cell && !cell.revealed;

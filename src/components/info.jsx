@@ -1,6 +1,5 @@
 /* eslint-env browser */
 /* global ga */
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|RevealSummary|History)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 require('./info.css');
@@ -60,7 +59,7 @@ class Info extends Component {
     setTimeout(()=>{
       this.setState({
         options: this.props.options,
-        mapKey: this.props.mapKey
+        mapKey: this.props.seed
       });
     });
   }
@@ -109,9 +108,10 @@ class Info extends Component {
   }
 
   updateHash(){
-    location.hash = Object.keys(this.state)
-      .filter(k => this.state[k])
-      .map(k => this.state[k] === true ? k : `${k}=${this.state[k]}`)
+    const { options } = this.state;
+    location.hash = Object.keys(options)
+      .filter(k => options[k])
+      .map(k => options[k] === true ? k : `${k}=${options[k]}`)
       .join(',');
   }
 
@@ -130,10 +130,12 @@ class Info extends Component {
 
   render(){
     if (!this.state) return null;
-    const { reveals, options, seed: currentMapKey } = this.props;
-    const { bestHardcore } = options;
-    const { safeStart, hardcore, mapKey } = this.state;
-    const optionsChanged = Object.keys(options).some(k => options[k] !== this.state[k]);
+    const { bestHardcore, reveals, options, seed: currentMapKey } = this.props;
+    const { options: { safeStart, hardcore, mapKey } } = this.state;
+    const optionsChanged =
+      options.safeStart !== safeStart ||
+      options.hardcore !== hardcore ||
+      (mapKey && currentMapKey !== mapKey);
     let newGame = <small>
       <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
     </small>;
@@ -156,7 +158,7 @@ class Info extends Component {
       }}>
         <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
         <label className='option'><input type='checkbox' checked={ hardcore } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
-        <label className='option'><input type='checkbox' checked={ mapKey } onChange={ this.toggleFixedSeed.bind(this) } />Use map key:&nbsp;</label>
+        <label className='option'><input type='checkbox' checked={ !!mapKey } onChange={ this.toggleFixedSeed.bind(this) } />Use map key:&nbsp;</label>
         <input disabled={ !mapKey } value={ mapKey || currentMapKey } onChange={ this.updateMapKey.bind(this) } />
       </div>
     </div>;
