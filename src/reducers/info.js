@@ -12,11 +12,12 @@ export function init(){
     .split(',')
     .reduce((hash,str) => {
       const [ key, value ] = str.split("=");
-      hash[key] = value === undefined ? true : value;
+      if (key !== '')
+        hash[key] = value === undefined ? true : value;
       return hash;
     }, {
-      safeStart: false,
-      hardcore: false
+      gameMode: 'normal',
+      safeStart: false
     });
   const seed = hashOptions.mapKey || newSeed();
   return {
@@ -28,7 +29,7 @@ export function init(){
 }
 
 export default function info(state, action){
-  const isHardcore = state.info.options.hardcore;
+  const isHardcore = state.info.options.gameMode !== 'learning';
 
   switch (action.type){
     case REVEAL:

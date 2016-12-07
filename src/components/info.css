@@ -15,7 +15,7 @@
   transform: translateY(-100%);
 }
 .info:hover, .app-is_game_over .info {
-  transform: translateY(-3.75rem); /* top + 1 */
+  transform: translateY(-3.75rem); /* -top - 1 */
 }
 .info > * {
   padding-top: 0.5em;
@@ -41,3 +41,27 @@
   font-size: 0.8rem;
   font-weight: normal;
 }
+
+.info_gameModes {
+  display: flex;
+  font-weight: normal;
+  max-width: 40em;
+}
+.info_gameModes > div {
+  padding: 0.5em;
+  border: 1px solid #000;
+  border-right-width: 0;
+  background: rgba(0,0,0, 0.4);
+  color: #AAA;
+}
+.info_gameModes > div.selected {
+  color: white;
+}
+.info_gameModes > div:first-child {
+  border-radius: 0.5em 0 0 0.5em;
+}
+.info_gameModes > div:last-child {
+  border-radius: 0 0.5em 0.5em 0;
+  border-right-width: 1px;
+}
+.info_gameModes blockquote { margin: 0; }

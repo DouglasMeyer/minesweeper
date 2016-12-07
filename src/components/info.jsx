@@ -78,39 +78,17 @@ class Info extends Component {
     }, this.updateHash);
   }
 
-  toggleHardcore(){
-    const { options } = this.state;
-    const { hardcore } = options;
-    this.setState({
-      options: Object.assign({}, options, {
-        hardcore: !hardcore
-      })
-    }, this.updateHash);
-  }
-
-  toggleFixedSeed(){
-    const { options, mapKey: currentMapKey } = this.state;
-    const { mapKey } = options;
-    this.setState({
-      options: Object.assign({}, options, {
-        mapKey: mapKey ? null : currentMapKey
-      })
-    }, this.updateHash);
-  }
-
-  updateMapKey(e){
+  setGameMode(gameMode){
     const { options } = this.state;
     this.setState({
-      options: Object.assign({}, options, {
-        mapKey: e.target.value
-      })
+      options: Object.assign({}, options, { gameMode })
     }, this.updateHash);
   }
 
   updateHash(){
     const { options } = this.state;
     location.hash = Object.keys(options)
-      .filter(k => options[k])
+      .filter(k => options[k] && !(k === 'gameMode' && options[k] === 'normal'))
       .map(k => options[k] === true ? k : `${k}=${options[k]}`)
       .join(',');
   }
@@ -130,12 +108,12 @@ class Info extends Component {
 
   render(){
     if (!this.state) return null;
-    const { bestHardcore, reveals, options, seed: currentMapKey } = this.props;
-    const { options: { safeStart, hardcore, mapKey } } = this.state;
+    const { bestHardcore, reveals, options } = this.props;
+    const { options: stateOptions } = this.state;
+    const { safeStart, gameMode = 'normal' } = stateOptions;
     const optionsChanged =
       options.safeStart !== safeStart ||
-      options.hardcore !== hardcore ||
-      (mapKey && currentMapKey !== mapKey);
+      options.gameMode !== gameMode;
     let newGame = <small>
       <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
     </small>;
@@ -146,20 +124,27 @@ class Info extends Component {
         .
       </small>;
     }
+    const gameModes = [
+      { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' },
+      { value: 'learning', title: 'Learning', description: 'When you hit a mine, you can keep going.' },
+      { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. Once you click a mine, you are out.' }
+    ];
 
     return <div className='info'>
-      <RevealSummary reveals={reveals} bestHardcore={hardcore ? bestHardcore : null}></RevealSummary>
+      <RevealSummary reveals={reveals} bestHardcore={options.gameMode !== 'learning' ? bestHardcore : null}></RevealSummary>
       <History reveals={reveals}></History>
       { newGame }
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        height: '1.5rem'
-      }}>
-        <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
-        <label className='option'><input type='checkbox' checked={ hardcore } onChange={ this.toggleHardcore.bind(this) } />Hardcore</label>
-        <label className='option'><input type='checkbox' checked={ !!mapKey } onChange={ this.toggleFixedSeed.bind(this) } />Use map key:&nbsp;</label>
-        <input disabled={ !mapKey } value={ mapKey || currentMapKey } onChange={ this.updateMapKey.bind(this) } />
+      <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
+      <div className="info_gameModes">
+        { gameModes.map(({ value, title, description })=>
+          <div key={ value }
+            className={ value === gameMode ? "selected" : "" }
+            onClick={ this.setGameMode.bind(this, value) }
+          >
+            <h5>{ title }</h5>
+            <blockquote>{ description }</blockquote>
+          </div>
+        , this) }
       </div>
     </div>;
   }
@@ -170,7 +155,7 @@ Info.propTypes = {
   reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   options: PropTypes.shape({
     safeStart: PropTypes.boolean,
-    hardcore: PropTypes.boolean
+    gameMode: PropTypes.oneOf('normal learning cooperative'.split(' '))
   }).isRequired,
   seed: PropTypes.string.isRequired,
   onNewGame: PropTypes.func.isRequired,
