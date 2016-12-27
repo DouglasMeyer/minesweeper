@@ -28,8 +28,8 @@ export function reveal(...positions){
       revealing = false;
       const state = getState();
       const fields = state.fields;
-      const { isGameOver } = state.info;
-      if (isGameOver){
+      const { gameOverMove } = state.info;
+      if (gameOverMove){
         positionsToReveal = [];
         return;
       }

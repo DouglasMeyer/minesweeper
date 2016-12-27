@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { REVEAL } from '../actions';
+import { REVEAL, NEW_GAME } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
 const bestHardcoreKey = 'minesweeper.bestHardcore';
@@ -28,10 +28,14 @@ export function init(){
   };
 }
 
-export default function info(state, action){
+export default function info(oldState=init(), action){
+  const state = (oldState && oldState.info) ? oldState : Object.assign({}, oldState, { info: init() });
   const isHardcore = state.info.options.gameMode !== 'learning';
 
   switch (action.type){
+    case NEW_GAME:
+      return Object.assign({}, state, { info: init() });
+
     case REVEAL:
       const fields = state.fields;
       const newInfo = action.positions.reduce((state, pos) => {
@@ -39,7 +43,7 @@ export default function info(state, action){
         if (cell.mine) {
           if (isHardcore){
             return Object.assign({}, state, {
-              isGameOver: true
+              gameOverMove: action
             });
           } else {
             return Object.assign({}, state, {

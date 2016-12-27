@@ -58,10 +58,10 @@ export default class App extends Component {
       onKeyDown, onKeyUp,
       onRevealSafe, onNewGame
     } = this.props;
-    const { isGameOver } = info;
+    const { gameOverMove } = info;
 
     return <div
-      className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
+      className={ `app${gameOverMove ? ' app-is_game_over' : ''}` }
       tabIndex={0}
       ref={ el => el && el.focus() }
       onKeyDown={ e =>{

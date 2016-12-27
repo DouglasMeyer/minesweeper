@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG } from '../actions';
+import { REVEAL, FLAG, UNFLAG, NEW_GAME } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -66,15 +66,22 @@ export function init(seed){
     .map((field, _i, fields) => ensureFieldWithNeighbors(field, fields));
 }
 
-export default function fields(state, action, seed){
+export default function fields(oldState, action){
+  const state = (oldState && oldState.fields) ? oldState : Object.assign({}, oldState, { fields: init(oldState.info.seed) });
+
   switch (action.type){
+    case NEW_GAME:
+      return Object.assign({}, state, { fields: init(state.info.seed) });
+
     case REVEAL:
     case FLAG:
     case UNFLAG:
+      const { gameOverMove } = state.info;
+      if (gameOverMove && action !== gameOverMove) return state;
       const positionsByField = action.positions.reduce((acc, position) => {
         const fx = Math.floor(position.x / fieldSize);
         const fy = Math.floor(position.y / fieldSize);
-        const field = state.find(field => field.position.x === fx && field.position.y === fy);
+        const field = state.fields.find(field => field.position.x === fx && field.position.y === fy);
         if (!acc.has(field)) acc.set(field, []);
         const positions = acc.get(field);
         positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
@@ -84,16 +91,18 @@ export default function fields(state, action, seed){
       const newState = Array.from(positionsByField.keys())
       .filter(f => !f.loaded)
       .reduce((fields, fieldToLoad) => {
-        return fields.concat(createNewNeighbors(fields, fieldToLoad, seed));
-      }, state);
-      return newState.map((field, _fieldIndex, fields) => {
-        if (positionsByField.has(field)) {
-          return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
-            positions: positionsByField.get(field),
-            loaded: true
-          }));
-        }
-        return field;
+        return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.seed));
+      }, state.fields);
+      return Object.assign({}, state, {
+        fields: newState.map((field, _fieldIndex, fields) => {
+          if (positionsByField.has(field)) {
+            return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
+              positions: positionsByField.get(field),
+              loaded: true
+            }));
+          }
+          return field;
+        })
       });
 
     default:
