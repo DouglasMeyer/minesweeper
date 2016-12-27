@@ -39,24 +39,21 @@ function revealCells(state, positions){
     });
   }, state);
 }
-export default function field(oldState, action, seed){
-  const state = oldState || defaultState(action, seed);
-  let flagged = false;
+export default function field(_state, action, seed){
+  const state = _state || defaultState(action, seed);
 
-  switch (action.type){
-    case REVEAL:
-      return revealCells(state, action.positions);
-
-    case FLAG:
-      flagged = true;
-    case UNFLAG:
-      const { x, y } = action.positions[0];
+  const r = {
+    [REVEAL]: ({ positions })=> revealCells(state, positions),
+    [FLAG]: ({ positions })=> {
+      const { x, y } = positions[0];
       const index = y * fieldSize + x;
-      return updateCell(state, index, {
-        flagged
-      });
-
-    default:
-      return state;
-  }
+      return updateCell(state, index, { flagged: true });
+    },
+    [UNFLAG]: ({ positions })=> {
+      const { x, y } = positions[0];
+      const index = y * fieldSize + x;
+      return updateCell(state, index, { flagged: false });
+    }
+  }[action.type];
+  return r ? r(action) : state;
 }

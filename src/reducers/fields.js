@@ -66,46 +66,45 @@ export function init(seed){
     .map((field, _i, fields) => ensureFieldWithNeighbors(field, fields));
 }
 
-export default function fields(oldState, action){
-  const state = (oldState && oldState.fields) ? oldState : Object.assign({}, oldState, { fields: init(oldState.info.seed) });
+export default function fields(_state, action){
+  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.seed) });
 
-  switch (action.type){
-    case NEW_GAME:
-      return Object.assign({}, state, { fields: init(state.info.seed) });
-
-    case REVEAL:
-    case FLAG:
-    case UNFLAG:
-      const { gameOverMove } = state.info;
-      if (gameOverMove && action !== gameOverMove) return state;
-      const positionsByField = action.positions.reduce((acc, position) => {
-        const fx = Math.floor(position.x / fieldSize);
-        const fy = Math.floor(position.y / fieldSize);
-        const field = state.fields.find(field => field.position.x === fx && field.position.y === fy);
-        if (!acc.has(field)) acc.set(field, []);
-        const positions = acc.get(field);
-        positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
-        acc.set(field, positions);
-        return acc;
-      }, new Map());
-      const newState = Array.from(positionsByField.keys())
-      .filter(f => !f.loaded)
-      .reduce((fields, fieldToLoad) => {
-        return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.seed));
-      }, state.fields);
-      return Object.assign({}, state, {
-        fields: newState.map((field, _fieldIndex, fields) => {
-          if (positionsByField.has(field)) {
-            return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
-              positions: positionsByField.get(field),
-              loaded: true
-            }));
-          }
-          return field;
-        })
-      });
-
-    default:
-      return state;
+  function delegateActionToIndividualFields(){
+    const { gameOverMove } = state.info;
+    if (gameOverMove && action !== gameOverMove) return state;
+    const positionsByField = action.positions.reduce((acc, position) => {
+      const fx = Math.floor(position.x / fieldSize);
+      const fy = Math.floor(position.y / fieldSize);
+      const field = state.fields.find(field => field.position.x === fx && field.position.y === fy);
+      if (!acc.has(field)) acc.set(field, []);
+      const positions = acc.get(field);
+      positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
+      acc.set(field, positions);
+      return acc;
+    }, new Map());
+    const newState = Array.from(positionsByField.keys())
+    .filter(f => !f.loaded)
+    .reduce((fields, fieldToLoad) => {
+      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.seed));
+    }, state.fields);
+    return Object.assign({}, state, {
+      fields: newState.map((field, _fieldIndex, fields) => {
+        if (positionsByField.has(field)) {
+          return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
+            positions: positionsByField.get(field),
+            loaded: true
+          }));
+        }
+        return field;
+      })
+    });
   }
+
+  const r = {
+    [NEW_GAME]: ()=> Object.assign({}, state, { fields: init(state.info.seed) }),
+    [REVEAL]: ()=> delegateActionToIndividualFields(),
+    [FLAG]: ()=> delegateActionToIndividualFields(),
+    [UNFLAG]: ()=> delegateActionToIndividualFields()
+  }[action.type];
+  return r ? r(action) : state;
 }

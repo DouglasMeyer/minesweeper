@@ -28,16 +28,14 @@ export function init(){
   };
 }
 
-export default function info(oldState=init(), action){
-  const state = (oldState && oldState.info) ? oldState : Object.assign({}, oldState, { info: init() });
-  const isHardcore = state.info.options.gameMode !== 'learning';
+export default function info(_state, action){
+  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: init() });
 
-  switch (action.type){
-    case NEW_GAME:
-      return Object.assign({}, state, { info: init() });
-
-    case REVEAL:
+  const r = {
+    [NEW_GAME]: ()=> Object.assign({}, state, { info: init() }),
+    [REVEAL]: ()=> {
       const fields = state.fields;
+      const isHardcore = state.info.options.gameMode !== 'learning';
       const newInfo = action.positions.reduce((state, pos) => {
         const cell = cellAt(fields, pos.x, pos.y);
         if (cell.mine) {
@@ -57,7 +55,7 @@ export default function info(oldState=init(), action){
           bestHardcore = currentReveals;
           try {
             localStorage.setItem(bestHardcoreKey, bestHardcore);
-          } catch (e) { console.error(e); }
+          } catch (e) { console.error(e); } // eslint-disable-line no-console
         }
         return Object.assign({}, state, {
           bestHardcore,
@@ -68,8 +66,7 @@ export default function info(oldState=init(), action){
         });
       }, state.info);
       return Object.assign({}, state, { info: newInfo });
-
-    default:
-      return state;
-  }
+    }
+  }[action.type];
+  return r ? r(action) : state;
 }

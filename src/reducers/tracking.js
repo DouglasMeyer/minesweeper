@@ -6,24 +6,19 @@ export function init(){
   };
 }
 
-export default function tracking(oldState, action){
-  const state = (oldState && oldState.tracking) ? oldState : Object.assign({}, oldState, { tracking: init() });
+export default function tracking(_state, action){
+  const state = (_state && _state.tracking) ? _state : Object.assign({}, _state, { tracking: init() });
 
-  switch (action.type){
-    case NEW_GAME:
-      return Object.assign({}, state, { tracking: init() });
-
-    case MOVE:
-      return Object.assign({}, state, {
+  const r = {
+    [NEW_GAME]: ()=> Object.assign({}, state, { tracking: init() }),
+    [MOVE]: ({ dx, dy })=> Object.assign({}, state, {
         tracking: Object.assign({}, state.tracking, {
           position: {
-            x: state.tracking.position.x + action.dx,
-            y: state.tracking.position.y + action.dy
+            x: state.tracking.position.x + dx,
+            y: state.tracking.position.y + dy
           }
         })
-      });
-
-    default:
-      return state;
-  }
+      })
+  }[action.type];
+  return r ? r(action) : state;
 }
