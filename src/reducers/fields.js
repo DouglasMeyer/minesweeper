@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG, NEW_GAME } from '../actions';
+import { REVEAL, FLAG, UNFLAG, NEW_GAME, SET_MAP_SEED } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -104,7 +104,8 @@ export default function fields(_state, action){
     [NEW_GAME]: ()=> Object.assign({}, state, { fields: init(state.info.seed) }),
     [REVEAL]: ()=> delegateActionToIndividualFields(),
     [FLAG]: ()=> delegateActionToIndividualFields(),
-    [UNFLAG]: ()=> delegateActionToIndividualFields()
+    [UNFLAG]: ()=> delegateActionToIndividualFields(),
+    [SET_MAP_SEED]: ({ mapSeed })=> Object.assign({}, state, { fields: init(mapSeed) })
   }[action.type];
   return r ? r(action) : state;
 }

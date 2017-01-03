@@ -35,6 +35,7 @@ module.exports = {
   plugins: [
     new CopyPlugin([
       { from: './*.html' },
+      { from: './lib/*' },
       { from: '../node_modules/babel-polyfill/dist/polyfill.min.js' }
     ]),
     isDev ? null : new webpack.DefinePlugin({

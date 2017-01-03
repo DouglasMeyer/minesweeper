@@ -1,7 +1,7 @@
 import { REVEAL, FLAG, UNFLAG } from '../actions';
 import { fieldSize } from '../helpers';
 
-import seedrandom from 'seedrandom';
+// import seedrandom from 'seedrandom';
 
 const mineFrequency = 0.2;
 const blankCells = [];
@@ -12,7 +12,7 @@ function defaultState({ x, y }, seed){
     x: Math.floor(x / fieldSize),
     y: Math.floor(y / fieldSize)
   };
-  const random = seedrandom(`${seed}_${position.x}_${position.y}`);
+  const random = new Math.seedrandom(`${seed}_${position.x}_${position.y}`);
   const cells = blankCells
     .map(() => ({ mine: random() < mineFrequency }));
   return {

@@ -10,6 +10,16 @@ export const FLAG = 'FLAG';
 export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
+export const SET_GAME_MODE = 'SET_GAME_MODE';
+export const SET_SAFE_START = 'SET_SAFE_START';
+export const SET_NEXT_GAME_MODE = 'SET_NEXT_GAME_MODE';
+export const SET_NEXT_SAFE_START = 'SET_NEXT_SAFE_START';
+export const PEER_OPEN = 'PEER_OPEN';
+export const PEER_CONNECTED = 'PEER_CONNECTED';
+export const PEER_DISCONNECTED = 'PEER_DISCONNECTED';
+export const SET_MAP_SEED = 'SET_MAP_SEED';
+export const SET_PEERS = 'SET_PEERS';
+export const PEER_UNAVAILABLE = 'PEER_UNAVAILABLE';
 
 /*
  * action creators
@@ -146,4 +156,44 @@ export function scroll({ dx, dy }){
 
 export function newGame(){
   return { type: NEW_GAME };
+}
+
+export function setGameMode(gameMode){
+  return { type: SET_GAME_MODE, gameMode };
+}
+
+export function setSafeStart(safeStart){
+  return { type: SET_SAFE_START, safeStart };
+}
+
+export function setNextGameMode(gameMode){
+  return { type: SET_NEXT_GAME_MODE, gameMode };
+}
+
+export function setNextSafeStart(safeStart){
+  return { type: SET_NEXT_SAFE_START, safeStart };
+}
+
+export function peerOpen(peerId){
+  return { type: PEER_OPEN, peerId };
+}
+
+export function peerConnected(peerId){
+  return { type: PEER_CONNECTED, peerId };
+}
+
+export function peerDisconnected(peerId){
+  return { type: PEER_DISCONNECTED, peerId };
+}
+
+export function setMapSeed(mapSeed){
+  return { type: SET_MAP_SEED, mapSeed };
+}
+
+export function setPeers(peers){
+  return { type: SET_PEERS, peers };
+}
+
+export function peerUnavailable(peerId){
+  return { type: PEER_UNAVAILABLE, peerId };
 }

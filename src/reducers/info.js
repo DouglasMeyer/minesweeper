@@ -1,41 +1,39 @@
 /* eslint-env browser */
-import { REVEAL, NEW_GAME } from '../actions';
+import { REVEAL, NEW_GAME, SET_GAME_MODE, SET_SAFE_START, SET_NEXT_GAME_MODE, SET_NEXT_SAFE_START, SET_MAP_SEED } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
 const bestHardcoreKey = 'minesweeper.bestHardcore';
 
-export function init(){
-  let bestHardcore = localStorage.getItem(bestHardcoreKey);
-  if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
-  const hashOptions = location.hash
-    .slice(1)
-    .split(',')
-    .reduce((hash,str) => {
-      const [ key, value ] = str.split("=");
-      if (key !== '')
-        hash[key] = value === undefined ? true : value;
-      return hash;
-    }, {
+function init(){
+    let bestHardcore = localStorage.getItem(bestHardcoreKey);
+    if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
+  return {
+    gameMode: 'normal',
+    safeStart: false,
+    info: {
+      reveals: [ 0 ],
+      bestHardcore,
+      seed: newSeed(),
       gameMode: 'normal',
       safeStart: false
-    });
-  const seed = hashOptions.mapKey || newSeed();
-  return {
-    reveals: [ 0 ],
-    bestHardcore,
-    seed,
-    options: hashOptions
+    }
   };
 }
 
 export default function info(_state, action){
-  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: init() });
+  const state = (_state && _state.info) ? _state : Object.assign({}, _state, init());
 
   const r = {
-    [NEW_GAME]: ()=> Object.assign({}, state, { info: init() }),
+    [NEW_GAME]: ()=> Object.assign({}, state, {
+      info: Object.assign({}, state.info, {
+        reveals: [ 0 ],
+        gameOverMove: null,
+        seed: newSeed()
+      })
+    }),
     [REVEAL]: ()=> {
       const fields = state.fields;
-      const isHardcore = state.info.options.gameMode !== 'learning';
+      const isHardcore = state.info.gameMode !== 'learning';
       const newInfo = action.positions.reduce((state, pos) => {
         const cell = cellAt(fields, pos.x, pos.y);
         if (cell.mine) {
@@ -66,7 +64,18 @@ export default function info(_state, action){
         });
       }, state.info);
       return Object.assign({}, state, { info: newInfo });
-    }
+    },
+    [SET_MAP_SEED]: ({ mapSeed }) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, { mapSeed })
+    }),
+    [SET_GAME_MODE]: ({ gameMode }) => Object.assign({}, state, { gameMode }),
+    [SET_SAFE_START]: ({ safeStart }) => Object.assign({}, state, { safeStart }),
+    [SET_NEXT_GAME_MODE]: ({ gameMode }) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, { gameMode })
+    }),
+    [SET_NEXT_SAFE_START]: ({ safeStart }) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, { safeStart })
+    })
   }[action.type];
   return r ? r(action) : state;
 }

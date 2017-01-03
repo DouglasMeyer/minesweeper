@@ -1,7 +1,9 @@
 /* eslint-env browser */
 /* global ga */
 import React, { PropTypes, Component } from 'react';
+import { connect } from 'react-redux';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
+import { revealSafe, newGame, setNextGameMode, setNextSafeStart } from '../actions';
 require('./info.css');
 
 function RevealSummary({ bestHardcore, reveals }){
@@ -53,44 +55,28 @@ History.propTypes = {
 };
 
 class Info extends Component {
+  static get propTypes(){
+    return {
+      bestHardcore: PropTypes.number,
+      reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+      safeStart: PropTypes.bool,
+      gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
+      nextSafeStart: PropTypes.bool,
+      nextGameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
+      onNewGame: PropTypes.func.isRequired,
+      onRevealSafe: PropTypes.func.isRequired,
+      onSetNextSafeStart: PropTypes.func.isRequired,
+      onSetNextGameMode: PropTypes.func.isRequired
+    };
+  }
+
   constructor(){
     super();
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
-    setTimeout(()=>{
-      this.setState({
-        options: this.props.options,
-        mapKey: this.props.seed
-      });
-    });
   }
 
   componentDidMount(){
-    this.revealIfSafeStart();
-  }
-
-  toggleSafeStart(){
-    const { options } = this.state;
-    const { safeStart } = options;
-    this.setState({
-      options: Object.assign({}, options, {
-        safeStart: !safeStart
-      })
-    }, this.updateHash);
-  }
-
-  setGameMode(gameMode){
-    const { options } = this.state;
-    this.setState({
-      options: Object.assign({}, options, { gameMode })
-    }, this.updateHash);
-  }
-
-  updateHash(){
-    const { options } = this.state;
-    location.hash = Object.keys(options)
-      .filter(k => options[k] && !(k === 'gameMode' && options[k] === 'normal'))
-      .map(k => options[k] === true ? k : `${k}=${options[k]}`)
-      .join(',');
+    setTimeout(()=> this.revealIfSafeStart());
   }
 
   onNewGame(){
@@ -100,20 +86,20 @@ class Info extends Component {
 
   revealIfSafeStart(){
     ga('send', 'event', 'Game', 'start', location.hash);
-    const { onRevealSafe } = this.props;
-    const { safeStart } = this.props.options;
+    const { onRevealSafe, safeStart } = this.props;
 
     if (safeStart) onRevealSafe();
   }
 
   render(){
-    if (!this.state) return null;
-    const { bestHardcore, reveals, options } = this.props;
-    const { options: stateOptions } = this.state;
-    const { safeStart, gameMode = 'normal' } = stateOptions;
+    const {
+      bestHardcore, reveals, safeStart, gameMode, nextSafeStart, nextGameMode,
+      onSetNextSafeStart, onSetNextGameMode
+    } = this.props;
+
     const optionsChanged =
-      options.safeStart !== safeStart ||
-      options.gameMode !== gameMode;
+      safeStart !== nextSafeStart ||
+      gameMode !== nextGameMode;
     let newGame = <small>
       <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
     </small>;
@@ -131,15 +117,15 @@ class Info extends Component {
     ];
 
     return <div className='info'>
-      <RevealSummary reveals={reveals} bestHardcore={options.gameMode !== 'learning' ? bestHardcore : null}></RevealSummary>
+      <RevealSummary reveals={reveals} bestHardcore={gameMode !== 'learning' ? bestHardcore : null}></RevealSummary>
       <History reveals={reveals}></History>
       { newGame }
-      <label className='option'><input type='checkbox' checked={ safeStart } onChange={ this.toggleSafeStart.bind(this) } />Safe start</label>
+      <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
       <div className="info_gameModes">
         { gameModes.map(({ value, title, description })=>
           <div key={ value }
-            className={ value === gameMode ? "selected" : "" }
-            onClick={ this.setGameMode.bind(this, value) }
+            className={ value === nextGameMode ? "selected" : "" }
+            onClick={ onSetNextGameMode.bind(null, value) }
           >
             <h5>{ title }</h5>
             <blockquote>{ description }</blockquote>
@@ -149,16 +135,20 @@ class Info extends Component {
     </div>;
   }
 }
-
-Info.propTypes = {
-  bestHardcore: PropTypes.number,
-  reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-  options: PropTypes.shape({
-    safeStart: PropTypes.boolean,
-    gameMode: PropTypes.oneOf('normal learning cooperative'.split(' '))
-  }).isRequired,
-  seed: PropTypes.string.isRequired,
-  onNewGame: PropTypes.func.isRequired,
-  onRevealSafe: PropTypes.func.isRequired
-};
-export default Info;
+const connectedInfo = connect(
+  state => ({
+    bestHardcore: state.info.bestHardcore,
+    reveals: state.info.reveals,
+    safeStart: state.safeStart,
+    nextSafeStart: state.info.safeStart,
+    gameMode: state.gameMode,
+    nextGameMode: state.info.gameMode
+  }),
+  dispatch => ({
+    onRevealSafe: () => dispatch(revealSafe()),
+    onNewGame: () => dispatch(newGame()),
+    onSetNextGameMode: gameMode => dispatch(setNextGameMode(gameMode)),
+    onSetNextSafeStart: safeStart => dispatch(setNextSafeStart(safeStart))
+  })
+)(Info);
+export default connectedInfo;

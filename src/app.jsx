@@ -4,7 +4,9 @@ import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
-import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe, newGame } from './actions';
+import { PeerIntegration } from './peer_integration';
+import { Routing } from './routing';
+import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe, newGame, setGameMode } from './actions';
 
 export default class App extends Component {
   static get propTypes(){
@@ -23,7 +25,8 @@ export default class App extends Component {
       onKeyDown: func,
       onKeyUp: func,
       onRevealSafe: func,
-      onNewGame: func
+      onNewGame: func,
+      onSetGameMode: func
     };
   }
 
@@ -56,7 +59,7 @@ export default class App extends Component {
       fields, position, info,
       onReveal, onFlag, onUnflag,
       onKeyDown, onKeyUp,
-      onRevealSafe, onNewGame
+      onRevealSafe, onNewGame, onSetGameMode
     } = this.props;
     const { gameOverMove } = info;
 
@@ -78,6 +81,7 @@ export default class App extends Component {
         { ...info }
         onNewGame={ onNewGame }
         onRevealSafe={ onRevealSafe }
+        onSetGameMode={ onSetGameMode }
       ></Info>
       <Fields
         fields={ fields }
@@ -86,6 +90,8 @@ export default class App extends Component {
         onFlag={ onFlag }
         onUnflag={ onUnflag }
       ></Fields>
+      <PeerIntegration />
+      <Routing />
     </div>;
   }
 }
@@ -104,6 +110,7 @@ export default connect(
     onKeyUp: k => dispatch(keyUp(k)),
     onScroll: posD => dispatch(scroll(posD)),
     onRevealSafe: () => dispatch(revealSafe()),
-    onNewGame: () => dispatch(newGame())
+    onNewGame: () => dispatch(newGame()),
+    onSetGameMode: gameMode => dispatch(setGameMode(gameMode))
   })
 )(App);
