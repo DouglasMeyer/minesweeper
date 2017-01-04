@@ -1,8 +1,6 @@
 import { REVEAL, FLAG, UNFLAG } from '../actions';
 import { fieldSize } from '../helpers';
 
-// import seedrandom from 'seedrandom';
-
 const mineFrequency = 0.2;
 const blankCells = [];
 for (let i = 0; i < fieldSize * fieldSize; i++) blankCells.push(0);

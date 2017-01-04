@@ -1,8 +1,10 @@
 /* eslint-env browser */
 import { REVEAL, NEW_GAME, SET_GAME_MODE, SET_SAFE_START, SET_NEXT_GAME_MODE, SET_NEXT_SAFE_START, SET_MAP_SEED } from '../actions';
-import { cellAt, newSeed } from '../helpers';
+import { cellAt } from '../helpers';
 
 const bestHardcoreKey = 'minesweeper.bestHardcore';
+
+const newSeed = Math.seedrandom.bind(null, null, { pass: (_prng, seed)=> seed });
 
 function init(){
   let bestHardcore = localStorage.getItem(bestHardcoreKey);

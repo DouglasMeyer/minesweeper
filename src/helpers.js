@@ -24,18 +24,3 @@ export function cellAt(fields, x, y){
   if (!field) return;
   return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
 }
-
-const newArray = length => [...Array(length).keys()];
-const add = a => b => a + b;
-const upTo = (from,to)=> newArray(to-from+1).map(add(from));
-function charUpTo(str){
-  return upTo(str.charCodeAt(0),str.charCodeAt(3)).map(c=>String.fromCharCode(c));
-}
-const seedChars = charUpTo("0..9").concat(charUpTo("a..z"));
-function randomFrom(list){
-  return list[Math.floor(Math.random() * list.length)];
-}
-const randomSeedChar = randomFrom.bind(null, seedChars);
-export function newSeed(){
-  return newArray(8).map(randomSeedChar).join('');
-}
