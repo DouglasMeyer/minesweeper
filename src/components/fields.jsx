@@ -1,4 +1,4 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^(React|Field)$" }]*/
 import React, { PropTypes, Component } from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 

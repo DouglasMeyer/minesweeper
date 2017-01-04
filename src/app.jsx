@@ -58,10 +58,9 @@ export default class App extends Component {
     const {
       fields, position, info,
       onReveal, onFlag, onUnflag,
-      onKeyDown, onKeyUp,
-      onRevealSafe, onNewGame, onSetGameMode
+      onKeyDown, onKeyUp
     } = this.props;
-    const { gameOverMove } = info;
+    const { gameOverMove, seed } = info;
 
     return <div
       className={ `app${gameOverMove ? ' app-is_game_over' : ''}` }
@@ -77,18 +76,13 @@ export default class App extends Component {
       onTouchMove={ this.onTouchMove.bind(this) }
       onTouchEnd={ this.onTouchEnd.bind(this) }
     >
-      <Info
-        { ...info }
-        onNewGame={ onNewGame }
-        onRevealSafe={ onRevealSafe }
-        onSetGameMode={ onSetGameMode }
-      ></Info>
+      <Info />
       <Fields
         fields={ fields }
         position={ position }
         onReveal={ onReveal }
-        onFlag={ onFlag }
-        onUnflag={ onUnflag }
+        onFlag={ onFlag.bind(null, seed) }
+        onUnflag={ onUnflag.bind(null, seed) }
       ></Fields>
       <PeerIntegration />
       <Routing />
@@ -104,8 +98,8 @@ export default connect(
   }),
   dispatch => ({
     onReveal: pos => dispatch(reveal(pos)),
-    onFlag: pos => dispatch(flag(pos)),
-    onUnflag: pos => dispatch(unflag(pos)),
+    onFlag: (seed, pos) => dispatch(flag(seed, pos)),
+    onUnflag: (seed, pos) => dispatch(unflag(seed, pos)),
     onKeyDown: k => dispatch(keyDown(k)),
     onKeyUp: k => dispatch(keyUp(k)),
     onScroll: posD => dispatch(scroll(posD)),

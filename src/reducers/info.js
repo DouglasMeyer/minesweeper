@@ -5,8 +5,8 @@ import { cellAt, newSeed } from '../helpers';
 const bestHardcoreKey = 'minesweeper.bestHardcore';
 
 function init(){
-    let bestHardcore = localStorage.getItem(bestHardcoreKey);
-    if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
+  let bestHardcore = localStorage.getItem(bestHardcoreKey);
+  if (bestHardcore) bestHardcore = parseInt(bestHardcore, 10);
   return {
     gameMode: 'normal',
     safeStart: false,
@@ -32,6 +32,7 @@ export default function info(_state, action){
       })
     }),
     [REVEAL]: ()=> {
+      if (action.seed !== state.info.seed) return state;
       const fields = state.fields;
       const isHardcore = state.info.gameMode !== 'learning';
       const newInfo = action.positions.reduce((state, pos) => {
@@ -66,7 +67,7 @@ export default function info(_state, action){
       return Object.assign({}, state, { info: newInfo });
     },
     [SET_MAP_SEED]: ({ mapSeed }) => Object.assign({}, state, {
-      info: Object.assign({}, state.info, { mapSeed })
+      info: Object.assign({}, state.info, { seed: mapSeed })
     }),
     [SET_GAME_MODE]: ({ gameMode }) => Object.assign({}, state, { gameMode }),
     [SET_SAFE_START]: ({ safeStart }) => Object.assign({}, state, { safeStart }),

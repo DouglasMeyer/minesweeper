@@ -70,8 +70,11 @@ export default function fields(_state, action){
   const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.seed) });
 
   function delegateActionToIndividualFields(){
-    const { gameOverMove } = state.info;
-    if (gameOverMove && action !== gameOverMove) return state;
+    const { gameOverMove, seed } = state.info;
+    if (
+      (gameOverMove && action !== gameOverMove) ||
+      (seed !== action.seed)
+    ) return state;
     const positionsByField = action.positions.reduce((acc, position) => {
       const fx = Math.floor(position.x / fieldSize);
       const fy = Math.floor(position.y / fieldSize);

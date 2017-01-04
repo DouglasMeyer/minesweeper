@@ -33,6 +33,7 @@ export function reveal(...positions){
   return (dispatch, getState) => {
     if (revealing) return;
     revealing = true;
+    const { seed } = getState().info;
 
     function doReveal(){
       revealing = false;
@@ -49,7 +50,7 @@ export function reveal(...positions){
       });
       if (positionsToReveal.length === 0) return;
       const positionsToRevealNow = positionsToReveal.splice(0, 20);
-      dispatch({ type: REVEAL, positions: positionsToRevealNow });
+      dispatch({ type: REVEAL, seed, positions: positionsToRevealNow });
 
       positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
@@ -81,21 +82,19 @@ export function revealSafe(){
         return;
       }
       cellsToCheck.push(...nineSquare
+        .filter(({x, y})=> x !== 0 && y !== 0)
         .map(({x, y}) => ({ x: cellPos.x + x, y: cellPos.y + y }))
-        .filter(({x, y}) =>
-          !cellsToCheck.some(p => p.x === x && p.y === y)
-        )
       );
     }
   };
 }
 
-export function flag(position){
-  return { type: FLAG, positions: [ position ] };
+export function flag(seed, position){
+  return { type: FLAG, seed, positions: [ position ] };
 }
 
-export function unflag(position){
-  return { type: UNFLAG, positions: [ position ] };
+export function unflag(seed, position){
+  return { type: UNFLAG, seed, positions: [ position ] };
 }
 
 const keyMap = {

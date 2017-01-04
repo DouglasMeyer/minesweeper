@@ -3,8 +3,8 @@
 // === Components
 import { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
-import { newSeed } from './helpers';
-import { setSafeStart, setGameMode, setNextGameMode, setNextSafeStart, setMapSeed, setPeers } from './actions';
+import PureRenderMixin from 'react-addons-pure-render-mixin';
+import { setSafeStart, setGameMode, setNextGameMode, setNextSafeStart, setPeers } from './actions';
 
 function hash(options, ...peers){
   const shouldShowPeers = peers.length && options.gameMode === 'cooperative';
@@ -28,18 +28,18 @@ class Routing extends Component {
       onSetSafeStart: PropTypes.func.isRequired,
       onSetNextGameMode: PropTypes.func.isRequired,
       onSetNextSafeStart: PropTypes.func.isRequired,
-      onSetMapSeed: PropTypes.func.isRequired,
       onSetPeers: PropTypes.func.isRequired
     };
   }
 
-  shouldComponentUpdate(nextProps, _nextState){
-    return this.props !== nextProps;
+  constructor(){
+    super();
+    this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
   }
 
   componentWillMount(){
     const {
-      onSetGameMode, onSetSafeStart, onSetNextGameMode, onSetNextSafeStart, onSetMapSeed, onSetPeers
+      onSetGameMode, onSetSafeStart, onSetNextGameMode, onSetNextSafeStart, onSetPeers
     } = this.props;
 
     const hashOptions = location.hash
@@ -89,7 +89,6 @@ const connectedRouting = connect(
     peers: state.peers
   }),
   dispatch => ({
-    onSetMapSeed: mapSeed => dispatch(setMapSeed(mapSeed)),
     onSetPeers: peers => dispatch(setPeers(peers)),
     onSetGameMode: gameMode => dispatch(setGameMode(gameMode)),
     onSetSafeStart: safeStart => dispatch(setSafeStart(safeStart)),
