@@ -6,7 +6,7 @@ import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
 import { PeerIntegration } from './peer_integration';
 import { Routing } from './routing';
-import { reveal, flag, unflag, keyDown, keyUp, scroll, revealSafe, newGame, setGameMode } from './actions';
+import { reveal, flag, unflag, keyDown, keyUp, scroll } from './actions';
 
 export default class App extends Component {
   static get propTypes(){
@@ -23,10 +23,7 @@ export default class App extends Component {
       onFlag: func,
       onUnflag: func,
       onKeyDown: func,
-      onKeyUp: func,
-      onRevealSafe: func,
-      onNewGame: func,
-      onSetGameMode: func
+      onKeyUp: func
     };
   }
 
@@ -102,9 +99,6 @@ export default connect(
     onUnflag: (seed, pos) => dispatch(unflag(seed, pos)),
     onKeyDown: k => dispatch(keyDown(k)),
     onKeyUp: k => dispatch(keyUp(k)),
-    onScroll: posD => dispatch(scroll(posD)),
-    onRevealSafe: () => dispatch(revealSafe()),
-    onNewGame: () => dispatch(newGame()),
-    onSetGameMode: gameMode => dispatch(setGameMode(gameMode))
+    onScroll: posD => dispatch(scroll(posD))
   })
 )(App);
