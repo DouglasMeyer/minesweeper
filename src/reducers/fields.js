@@ -67,10 +67,11 @@ export function init(seed){
 }
 
 export default function fields(_state, action){
-  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.seed) });
+  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.currentGame.seed) });
 
   function delegateActionToIndividualFields(){
-    const { gameOverMove, seed } = state.info;
+    const { gameOverMove, seed } = state.info.currentGame;
+    console.log(seed === action.seed, seed, action.seed);
     if (
       (gameOverMove && action !== gameOverMove) ||
       (seed !== action.seed)
@@ -88,7 +89,7 @@ export default function fields(_state, action){
     const newState = Array.from(positionsByField.keys())
     .filter(f => !f.loaded)
     .reduce((fields, fieldToLoad) => {
-      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.seed));
+      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.currentGame.seed));
     }, state.fields);
     return Object.assign({}, state, {
       fields: newState.map((field, _fieldIndex, fields) => {
@@ -104,7 +105,7 @@ export default function fields(_state, action){
   }
 
   const r = {
-    [NEW_GAME]: ()=> Object.assign({}, state, { fields: init(state.info.seed) }),
+    [NEW_GAME]: ()=> Object.assign({}, state, { fields: init(state.info.currentGame.seed) }),
     [REVEAL]: ()=> delegateActionToIndividualFields(),
     [FLAG]: ()=> delegateActionToIndividualFields(),
     [UNFLAG]: ()=> delegateActionToIndividualFields(),

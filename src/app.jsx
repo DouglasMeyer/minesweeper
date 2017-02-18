@@ -57,7 +57,7 @@ export default class App extends Component {
       onReveal, onFlag, onUnflag,
       onKeyDown, onKeyUp
     } = this.props;
-    const { gameOverMove, seed } = info;
+    const { gameOverMove, seed } = info.currentGame;
 
     return <div
       className={ `app${gameOverMove ? ' app-is_game_over' : ''}` }

@@ -32,8 +32,9 @@ export function reveal(...positions){
 
   return (dispatch, getState) => {
     if (revealing) return;
+    requestAnimationFrame(doReveal);
     revealing = true;
-    const { seed } = getState().info;
+    const { seed } = getState().info.currentGame;
 
     function doReveal(){
       revealing = false;
@@ -64,7 +65,6 @@ export function reveal(...positions){
         requestAnimationFrame(doReveal);
       }
     }
-    requestAnimationFrame(doReveal);
   };
 }
 

@@ -83,11 +83,10 @@ class Routing extends Component {
   }
 }
 const connectedRouting = connect(
-  state => ({
-    safeStart: state.info.safeStart,
-    gameMode: state.info.gameMode,
-    peers: state.peers
-  }),
+  ({ peers, info }) => {
+    const { safeStart, gameMode } = info.nextGame;
+    return { safeStart, gameMode, peers };
+  },
   dispatch => ({
     onSetPeers: peers => dispatch(setPeers(peers)),
     onSetGameMode: gameMode => dispatch(setGameMode(gameMode)),

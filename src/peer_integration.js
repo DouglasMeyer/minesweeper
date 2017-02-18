@@ -99,21 +99,21 @@ class PeerIntegration extends Component {
               .filter(c=>c.revealed)
           )
           .reduce((a,b)=>a.concat(b));
-          const positionsToFlag = fields
-            .filter(f=>f.loaded)
-            .map(({ cells, position: { x, y } }) =>
-              cells
-                .map(({flagged}, index) => (
-                  { flagged,
-                    x: x * fieldSize + (index % fieldSize),
-                    y: y * fieldSize + Math.floor(index / fieldSize)
-                  }
-                ))
-                .filter(c=>c.flagged)
-            )
-            .reduce((a,b)=>a.concat(b));
-          if (positionsToReveal.length) peerWeb.send({ type: 'REVEAL', seed: mapSeed, positions: positionsToReveal });
-          positionsToFlag.forEach(positions => peerWeb.send({ type: 'FLAG', seed: mapSeed, positions: [positions] }));
+        const positionsToFlag = fields
+          .filter(f=>f.loaded)
+          .map(({ cells, position: { x, y } }) =>
+            cells
+              .map(({flagged}, index) => (
+                { flagged,
+                  x: x * fieldSize + (index % fieldSize),
+                  y: y * fieldSize + Math.floor(index / fieldSize)
+                }
+              ))
+              .filter(c=>c.flagged)
+          )
+          .reduce((a,b)=>a.concat(b));
+        if (positionsToReveal.length) peerWeb.send({ type: 'REVEAL', seed: mapSeed, positions: positionsToReveal });
+        positionsToFlag.forEach(positions => peerWeb.send({ type: 'FLAG', seed: mapSeed, positions: [positions] }));
       });
       peerWeb.onDisconnected(onPeerDisconnected);
       peerWeb.onClose(console.log.bind(console, 'onClose')); // eslint-disable-line no-console
@@ -126,8 +126,8 @@ class PeerIntegration extends Component {
 }
 const connectedPeerIntegration = connect(
   state => ({
-    gameMode: state.info.gameMode,
-    mapSeed: state.info.seed,
+    gameMode: state.info.currentGame.gameMode,
+    mapSeed: state.info.currentGame.seed,
     peers: state.peers,
     fields: state.fields
   }),

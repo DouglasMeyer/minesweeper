@@ -7,50 +7,13 @@ import { revealSafe, newGame, setNextGameMode, setNextSafeStart } from '../actio
 require('./info.css');
 
 function RevealSummary({ bestHardcore, reveals }){
-  const current = reveals[0];
-  const bestReveal = Math.max.apply(null, reveals);
-  const total = reveals.reduce((s, r) => s + r);
-  const summaryExtra = <small>
-    &nbsp;
-    &lt; { bestHardcore || bestReveal }
-    { bestHardcore ? false : ' = '+total }
-  </small>;
-
-  let label = 'current';
-  if (bestHardcore) {
-    label += ' < best';
-  } else if (reveals.length > 1) {
-    label += ' < best = total';
-  }
-
   return <div className='info_summary'>
-    <small>{ label }</small>
-    <div>
-      Squares revealed: { current }
-      { bestHardcore || reveals.length > 1 ? summaryExtra : false }
-    </div>
+    <small>current &lt; best</small>
+    <div>Squares revealed: { reveals.length } <small>&lt; { bestHardcore }</small></div>
   </div>;
 }
 RevealSummary.propTypes = {
   bestHardcore: PropTypes.number,
-  reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired
-};
-
-function History({ reveals }){
-  if (reveals.length === 1) return null;
-
-  return <div>
-    Previous runs:
-    <ol
-      className='info_list'
-      onWheel={ e => e.stopPropagation() }
-      ref={ el => { if (el){ el.scrollTop = 999999; } } }
-    >
-      { reveals.slice(1).reverse().map((n, i) => <li key={i}>{ n }</li>)}
-    </ol>
-  </div>;
-}
-History.propTypes = {
   reveals: PropTypes.array.isRequired
 };
 
@@ -58,7 +21,7 @@ class Info extends Component {
   static get propTypes(){
     return {
       bestHardcore: PropTypes.number,
-      reveals: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+      reveals: PropTypes.array.isRequired,
       safeStart: PropTypes.bool,
       gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
       nextSafeStart: PropTypes.bool,
@@ -117,8 +80,7 @@ class Info extends Component {
     ];
 
     return <div className='info'>
-      <RevealSummary reveals={reveals} bestHardcore={gameMode !== 'learning' ? bestHardcore : null}></RevealSummary>
-      <History reveals={reveals}></History>
+      <RevealSummary reveals={reveals} bestHardcore={bestHardcore} />
       { newGame }
       <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
       <div className="info_gameModes">
@@ -138,11 +100,11 @@ class Info extends Component {
 const connectedInfo = connect(
   state => ({
     bestHardcore: state.info.bestHardcore,
-    reveals: state.info.reveals,
-    safeStart: state.safeStart,
-    nextSafeStart: state.info.safeStart,
-    gameMode: state.gameMode,
-    nextGameMode: state.info.gameMode
+    reveals: state.info.currentGame.reveals,
+    safeStart: state.info.currentGame.safeStart,
+    gameMode: state.info.currentGame.gameMode,
+    nextSafeStart: state.info.nextGame.safeStart,
+    nextGameMode: state.info.nextGame.gameMode
   }),
   dispatch => ({
     onRevealSafe: () => dispatch(revealSafe()),
