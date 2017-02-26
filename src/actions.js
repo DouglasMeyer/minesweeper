@@ -17,7 +17,6 @@ export const SET_NEXT_SAFE_START = 'SET_NEXT_SAFE_START';
 export const PEER_OPEN = 'PEER_OPEN';
 export const PEER_CONNECTED = 'PEER_CONNECTED';
 export const PEER_DISCONNECTED = 'PEER_DISCONNECTED';
-export const SET_MAP_SEED = 'SET_MAP_SEED';
 export const SET_PEERS = 'SET_PEERS';
 export const PEER_UNAVAILABLE = 'PEER_UNAVAILABLE';
 
@@ -38,10 +37,10 @@ export function reveal(...positions){
 
     function doReveal(){
       revealing = false;
-      const state = getState();
-      const fields = state.fields;
-      const { gameOverMove } = state.info;
-      if (gameOverMove){
+      const { fields, info: { currentGame: { reveals, gameMode } } } = getState();
+      const { isMine } = reveals[0] || {};
+      const learning = gameMode === 'learning';
+      if (isMine && !learning){
         positionsToReveal = [];
         return;
       }
@@ -90,11 +89,25 @@ export function revealSafe(){
 }
 
 export function flag(seed, position){
-  return { type: FLAG, seed, positions: [ position ] };
+  return (dispatch, getState)=>{
+    const { info: { currentGame: { reveals, gameMode } } } = getState();
+    const { isMine } = reveals[0] || {};
+    const learning = gameMode === 'learning';
+    if (!isMine || learning){
+      dispatch({ type: FLAG, seed, positions: [ position ] });
+    }
+  };
 }
 
 export function unflag(seed, position){
-  return { type: UNFLAG, seed, positions: [ position ] };
+  return (dispatch, getState)=>{
+    const { info: { currentGame: { reveals, gameMode } } } = getState();
+    const { isMine } = reveals[0] || {};
+    const learning = gameMode === 'learning';
+    if (!isMine || learning){
+      dispatch({ type: UNFLAG, seed, positions: [ position ] });
+    }
+  };
 }
 
 const keyMap = {
@@ -153,8 +166,8 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-export function newGame(){
-  return { type: NEW_GAME };
+export function newGame({ currentGame, nextGame, positionsToReveal, positionsToFlag }={}){
+  return { type: NEW_GAME, currentGame, nextGame, positionsToReveal, positionsToFlag };
 }
 
 export function setGameMode(gameMode){
@@ -183,10 +196,6 @@ export function peerConnected(peerId){
 
 export function peerDisconnected(peerId){
   return { type: PEER_DISCONNECTED, peerId };
-}
-
-export function setMapSeed(mapSeed){
-  return { type: SET_MAP_SEED, mapSeed };
 }
 
 export function setPeers(peers){

@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG, NEW_GAME, SET_MAP_SEED } from '../actions';
+import { REVEAL, FLAG, UNFLAG, NEW_GAME } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -69,9 +69,8 @@ export function init(seed){
 export default function fields(_state, action){
   const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.currentGame.seed) });
 
-  function delegateActionToIndividualFields(){
+  function delegateActionToIndividualFields(state, action){
     const { gameOverMove, seed } = state.info.currentGame;
-    console.log(seed === action.seed, seed, action.seed);
     if (
       (gameOverMove && action !== gameOverMove) ||
       (seed !== action.seed)
@@ -105,11 +104,19 @@ export default function fields(_state, action){
   }
 
   const r = {
-    [NEW_GAME]: ()=> Object.assign({}, state, { fields: init(state.info.currentGame.seed) }),
-    [REVEAL]: ()=> delegateActionToIndividualFields(),
-    [FLAG]: ()=> delegateActionToIndividualFields(),
-    [UNFLAG]: ()=> delegateActionToIndividualFields(),
-    [SET_MAP_SEED]: ({ mapSeed })=> Object.assign({}, state, { fields: init(mapSeed) })
+    [NEW_GAME]: ({ positionsToReveal = [], positionsToFlag = [] })=> {
+      const { seed } = state.info.currentGame;
+      const newState = Object.assign({}, state, { fields: init(seed) });
+      const revealAction = { type: REVEAL, seed, positions: positionsToReveal };
+      const flagActions = positionsToFlag.map(position => ({ type: FLAG, seed, positions: [ position ] }));
+      return [
+        revealAction,
+        ...flagActions
+      ].reduce(delegateActionToIndividualFields, newState);
+    },
+    [REVEAL]: ()=> delegateActionToIndividualFields(state, action),
+    [FLAG]: ()=> delegateActionToIndividualFields(state, action),
+    [UNFLAG]: ()=> delegateActionToIndividualFields(state, action)
   }[action.type];
   return r ? r(action) : state;
 }

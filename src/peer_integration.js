@@ -2,7 +2,7 @@
 let peerWeb;
 
 // === Reducers
-import { PEER_OPEN, SET_PEERS, PEER_CONNECTED, PEER_DISCONNECTED, PEER_UNAVAILABLE, REVEAL, FLAG, UNFLAG } from './actions';
+import { PEER_OPEN, SET_PEERS, PEER_CONNECTED, PEER_DISCONNECTED, PEER_UNAVAILABLE, REVEAL, FLAG, UNFLAG, newGame } from './actions';
 import { fieldSize } from './helpers';
 export function reducer(state, action){
   if (!state.peers) state.peers = [];
@@ -47,13 +47,21 @@ export function reducer(state, action){
 import { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
-import { peerOpen, peerConnected, peerDisconnected, setMapSeed, peerUnavailable } from './actions';
+import { peerOpen, peerConnected, peerDisconnected, peerUnavailable } from './actions';
 class PeerIntegration extends Component {
   static get propTypes(){
     return {
-      gameMode: PropTypes.string.isRequired,
+      currentGame: PropTypes.shape({
+        gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
+        safeStart: PropTypes.bool,
+        seed: PropTypes.string.isRequired
+      }).isRequired,
+      nextGame: PropTypes.shape({
+        gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
+        safeStart: PropTypes.bool,
+        seed: PropTypes.string.isRequired
+      }).isRequired,
       peers: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-      mapSeed: PropTypes.string,
       fields: PropTypes.array.isRequired,
       onPeerOpen: PropTypes.func.isRequired,
       onPeerConnected: PropTypes.func.isRequired,
@@ -70,7 +78,7 @@ class PeerIntegration extends Component {
 
   render(){
     const {
-      gameMode, peers,
+      currentGame: { gameMode }, peers,
       onPeerOpen, onPeerConnected, onPeerDisconnected, onPeerUnavailable,
       dispatch
     } = this.props;
@@ -82,10 +90,9 @@ class PeerIntegration extends Component {
         peers.forEach(peerWeb.addPeer);
       });
       peerWeb.onConnected(peerId => {
-        const { mapSeed, fields, peers } = this.props;
+        const { currentGame, nextGame, fields, peers } = this.props;
         onPeerConnected(peerId);
         if (peers.indexOf(peerId) !== -1) return;
-        peerWeb.send(setMapSeed(mapSeed));
         const positionsToReveal = fields
           .filter(f=>f.loaded)
           .map(({ cells, position: { x, y } }) =>
@@ -112,8 +119,7 @@ class PeerIntegration extends Component {
               .filter(c=>c.flagged)
           )
           .reduce((a,b)=>a.concat(b));
-        if (positionsToReveal.length) peerWeb.send({ type: 'REVEAL', seed: mapSeed, positions: positionsToReveal });
-        positionsToFlag.forEach(positions => peerWeb.send({ type: 'FLAG', seed: mapSeed, positions: [positions] }));
+        peerWeb.send(newGame({ currentGame, nextGame, positionsToReveal, positionsToFlag }));
       });
       peerWeb.onDisconnected(onPeerDisconnected);
       peerWeb.onClose(console.log.bind(console, 'onClose')); // eslint-disable-line no-console
@@ -126,8 +132,8 @@ class PeerIntegration extends Component {
 }
 const connectedPeerIntegration = connect(
   state => ({
-    gameMode: state.info.currentGame.gameMode,
-    mapSeed: state.info.currentGame.seed,
+    currentGame: state.info.currentGame,
+    nextGame: state.info.nextGame,
     peers: state.peers,
     fields: state.fields
   }),
