@@ -6,11 +6,13 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
+import * as actions from './actions';
+export { actions };
 
 import reducers from './reducers';
 import App from './app.jsx';
 
-const store = createStore(
+export const store = createStore(
   reducers,
   applyMiddleware(thunk)
 );

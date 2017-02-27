@@ -13,7 +13,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'app.js',
-    publicPath: '/'
+    publicPath: '/',
+    library: 'Minesweeper'
   },
   module: {
     loaders: [
@@ -26,8 +27,8 @@ module.exports = {
         }
       },
       {
-          test: /\.css$/,
-          loader: ExtractTextPlugin.extract("style-loader", "css-loader?sourceMap!postcss-loader")
+        test: /\.css$/,
+        loader: ExtractTextPlugin.extract("style-loader", "css-loader?sourceMap!postcss-loader")
       },
       { test: /\.svg$/, loader: "url-loader?limit=10000" }
     ]
