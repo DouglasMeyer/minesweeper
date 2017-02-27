@@ -12,9 +12,7 @@ import App from './app.jsx';
 
 const store = createStore(
   reducers,
-  applyMiddleware(
-    thunk
-  )
+  applyMiddleware(thunk)
 );
 
 if (!window.requestAnimationFrame){

@@ -6,22 +6,26 @@ import PureRenderMixin from 'react-addons-pure-render-mixin';
 import { revealSafe, newGame, setNextGameMode, setNextSafeStart } from '../actions';
 require('./info.css');
 
-function RevealSummary({ bestHardcore, reveals }){
+function RevealSummary({ bestHardcore, revealCount }){
   return <div className='info_summary'>
     <small>current &lt; best</small>
-    <div>Squares revealed: { reveals.length } <small>&lt; { bestHardcore }</small></div>
+    <div>Squares revealed: { revealCount } <small>&lt; { bestHardcore }</small></div>
   </div>;
 }
 RevealSummary.propTypes = {
   bestHardcore: PropTypes.number,
-  reveals: PropTypes.array.isRequired
+  revealCount: PropTypes.number.isRequired
 };
 
 class Info extends Component {
   static get propTypes(){
     return {
       bestHardcore: PropTypes.number,
-      reveals: PropTypes.array.isRequired,
+      peerId: PropTypes.string.isRequired,
+      reveals: PropTypes.objectOf(PropTypes.shape({
+        count: PropTypes.number.isRequired,
+        isGameOver: PropTypes.bool.isRequired
+      })).isRequired,
       safeStart: PropTypes.bool,
       gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
       nextSafeStart: PropTypes.bool,
@@ -56,9 +60,10 @@ class Info extends Component {
 
   render(){
     const {
-      bestHardcore, reveals, safeStart, gameMode, nextSafeStart, nextGameMode,
+      bestHardcore, peerId, reveals, safeStart, gameMode, nextSafeStart, nextGameMode,
       onSetNextSafeStart, onSetNextGameMode
     } = this.props;
+    const { count: revealCount } = reveals[peerId];
 
     const optionsChanged =
       safeStart !== nextSafeStart ||
@@ -73,14 +78,14 @@ class Info extends Component {
         .
       </small>;
     }
-    const gameModes = [
-      { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' },
-      { value: 'learning', title: 'Learning', description: 'When you hit a mine, you can keep going.' },
-      { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. Once you click a mine, you are out.' }
+    const gameModes =
+    [ { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' }
+    , { value: 'learning', title: 'Learning', description: 'When you hit a mine, you can keep going.' }
+    , { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. Once you click a mine, you are out.' }
     ];
 
     return <div className='info'>
-      <RevealSummary reveals={reveals} bestHardcore={bestHardcore} />
+      <RevealSummary revealCount={revealCount} bestHardcore={bestHardcore} />
       { newGame }
       <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
       <div className="info_gameModes">
@@ -100,6 +105,7 @@ class Info extends Component {
 const connectedInfo = connect(
   state => ({
     bestHardcore: state.info.bestHardcore,
+    peerId: state.info.peerId,
     reveals: state.info.currentGame.reveals,
     safeStart: state.info.currentGame.safeStart,
     gameMode: state.info.currentGame.gameMode,

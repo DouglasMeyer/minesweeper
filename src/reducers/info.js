@@ -9,13 +9,13 @@ const newSeed = Math.seedrandom.bind(null, null, { pass: (_prng, seed)=> seed })
 function newGame({
   gameMode = 'normal',
   safeStart = false,
-  reveals = [],
   seed
-}={}){
+}={},
+peerId){
   return {
     gameMode,
     safeStart,
-    reveals,
+    reveals: { [peerId]: { count: 0, isGameOver: false } },
     seed: seed || newSeed()
   };
 }
@@ -27,8 +27,8 @@ function init(){
     bestHardcore,
     peerId: 'solo',
     previousGames: [],
-    currentGame: newGame(),
-    nextGame: newGame()
+    currentGame: newGame(undefined, 'solo'),
+    nextGame: newGame(undefined, 'solo')
   };
 }
 
@@ -38,28 +38,57 @@ export default function info(_state, action){
   const r = {
     [NEW_GAME]: ({ currentGame = state.info.nextGame, nextGame })=>{
       const previousGames = state.info.previousGames.concat([ state.info.currentGame ]);
+      const { peerId } = state.info;
       return Object.assign({}, state, {
         info: Object.assign({}, state.info, {
           previousGames,
-          currentGame,
-          nextGame: nextGame || newGame(Object.assign({}, currentGame, { seed: null }))
+          currentGame: Object.assign({}, currentGame, {
+            reveals: Object.assign({}, currentGame.reveals, {
+              [peerId]: currentGame.reveals[peerId] || { count: 0, isGameOver: false }
+            })
+          }),
+          nextGame: nextGame || newGame(Object.assign({}, currentGame, { seed: null }), peerId)
         })
       });
     },
-    [PEER_OPEN]: peerId => Object.assign({}, state, { info: Object.assign({}, state.info, { peerId }) }),
+    [PEER_OPEN]: ({peerId}) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, {
+        peerId,
+        currentGame: Object.assign({}, state.info.currentGame, {
+          reveals: Object.assign({}, state.info.currentGame.reveals, {
+            solo: undefined,
+            [peerId]: state.info.currentGame.reveals.solo
+          })
+        })
+      })
+    }),
     [REVEAL]: ()=> {
       if (
         action.seed !== state.info.currentGame.seed
       ) return state;
       const { fields, info: { peerId } } = state;
       const newInfo = action.positions.reduce((info, pos) => {
-        const isHardcore = info.currentGame.gameMode !== 'learning';
+        const isLearning = info.currentGame.gameMode === 'learning';
         const cell = cellAt(fields, pos.x, pos.y);
-        const isMine = cell.mine;
-        const reveals = [ Object.assign({}, pos, { peerId, isMine }), ...info.currentGame.reveals ];
+        let reveals = info.currentGame.reveals;
+        if (action.peerId === peerId ) {
+          if (!cell.mine) {
+            reveals = Object.assign({}, reveals, {
+              [info.peerId]: Object.assign({}, reveals[peerId], {
+                count: reveals[peerId].count + 1
+              })
+            });
+          } else if (!isLearning) {
+            reveals = Object.assign({}, reveals, {
+              [info.peerId]: Object.assign({}, reveals[peerId], {
+                isGameOver: true
+              })
+            });
+          }
+        }
         let bestHardcore = info.bestHardcore;
-        if (isHardcore && reveals.length > bestHardcore) {
-          bestHardcore = reveals.length;
+        if (!isLearning && reveals[peerId].count > bestHardcore) {
+          bestHardcore = reveals[peerId].count;
           try {
             localStorage.setItem(bestHardcoreKey, bestHardcore);
           } catch (e) { console.error(e); } // eslint-disable-line no-console

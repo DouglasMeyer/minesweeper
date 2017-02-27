@@ -37,10 +37,9 @@ export function reveal(...positions){
 
     function doReveal(){
       revealing = false;
-      const { fields, info: { currentGame: { reveals, gameMode } } } = getState();
-      const { isMine } = reveals[0] || {};
-      const learning = gameMode === 'learning';
-      if (isMine && !learning){
+      const { fields, info: { peerId, currentGame: { reveals } } } = getState();
+      const { isGameOver } = reveals[peerId];
+      if (isGameOver){
         positionsToReveal = [];
         return;
       }
@@ -50,7 +49,7 @@ export function reveal(...positions){
       });
       if (positionsToReveal.length === 0) return;
       const positionsToRevealNow = positionsToReveal.splice(0, 20);
-      dispatch({ type: REVEAL, seed, positions: positionsToRevealNow });
+      dispatch({ type: REVEAL, seed, peerId, positions: positionsToRevealNow });
 
       positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
@@ -90,10 +89,9 @@ export function revealSafe(){
 
 export function flag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { currentGame: { reveals, gameMode } } } = getState();
-    const { isMine } = reveals[0] || {};
-    const learning = gameMode === 'learning';
-    if (!isMine || learning){
+    const { info: { peerId, currentGame: { reveals } } } = getState();
+    const { isGameOver } = reveals[peerId];
+    if (!isGameOver){
       dispatch({ type: FLAG, seed, positions: [ position ] });
     }
   };
@@ -101,10 +99,9 @@ export function flag(seed, position){
 
 export function unflag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { currentGame: { reveals, gameMode } } } = getState();
-    const { isMine } = reveals[0] || {};
-    const learning = gameMode === 'learning';
-    if (!isMine || learning){
+    const { info: { peerId, currentGame: { reveals } } } = getState();
+    const { isGameOver } = reveals[peerId];
+    if (!isGameOver){
       dispatch({ type: UNFLAG, seed, positions: [ position ] });
     }
   };

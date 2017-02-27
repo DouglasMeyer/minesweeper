@@ -8,7 +8,7 @@ import { PeerIntegration } from './peer_integration';
 import { Routing } from './routing';
 import { reveal, flag, unflag, keyDown, keyUp, scroll } from './actions';
 
-export default class App extends Component {
+class App extends Component {
   static get propTypes(){
     const func = PropTypes.func.isRequired;
     return {
@@ -57,12 +57,11 @@ export default class App extends Component {
       onReveal, onFlag, onUnflag,
       onKeyDown, onKeyUp
     } = this.props;
-    const { reveals, seed, gameMode } = info.currentGame;
-    const { isMine } = reveals[0] || {};
-    const learning = gameMode === 'learning';
+    const { peerId, currentGame: { reveals, seed } } = info;
+    const { isGameOver } = reveals[peerId];
 
     return <div
-      className={ `app${isMine && !learning ? ' app-is_game_over' : ''}` }
+      className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
       tabIndex={0}
       ref={ el => el && el.focus() }
       onKeyDown={ e =>{
