@@ -48,5 +48,11 @@ module.exports = {
   ].filter(x=>x),
   postcss: function () {
     return [ autoprefixer ];
+  },
+  resolve: {
+    alias: {
+      'react': 'preact-compat',
+      'react-dom': 'preact-compat'
+    }
   }
 };
