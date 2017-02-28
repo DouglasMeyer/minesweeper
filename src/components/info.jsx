@@ -9,7 +9,7 @@ require('./info.css');
 function RevealSummary({ bestHardcore, revealCount }){
   return <div className='info_summary'>
     <small>current &lt; best</small>
-    <div>Squares revealed: { revealCount } <small>&lt; { bestHardcore }</small></div>
+    <div>Score: { revealCount } <small>&lt; { bestHardcore }</small></div>
   </div>;
 }
 RevealSummary.propTypes = {
@@ -81,23 +81,26 @@ class Info extends Component {
     const gameModes =
     [ { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' }
     , { value: 'learning', title: 'Learning', description: 'When you hit a mine, you can keep going.' }
-    , { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. Once you click a mine, you are out.' }
+    , { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. But once you click a mine, you are out.' }
     ];
+    const gameModeDescription = gameModes.find(m => m.value === nextGameMode).description;
 
     return <div className='info'>
       <RevealSummary revealCount={revealCount} bestHardcore={bestHardcore} />
       { newGame }
       <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
-      <div className="info_gameModes">
-        { gameModes.map(({ value, title, description })=>
-          <div key={ value }
-            className={ value === nextGameMode ? "selected" : "" }
-            onClick={ onSetNextGameMode.bind(null, value) }
-          >
-            <h5>{ title }</h5>
-            <blockquote>{ description }</blockquote>
-          </div>
-        , this) }
+      <div className="info_gameMode">
+        <div className="info_gameMode_modes">
+          { gameModes.map(({ value, title })=>
+            <h5 key={ value }
+              className={ value === nextGameMode ? "selected" : "" }
+              onClick={ onSetNextGameMode.bind(null, value) }
+            >
+              { title }
+            </h5>
+          , this) }
+        </div>
+        <div className="info_gameMode_description">{ gameModeDescription }</div>
       </div>
     </div>;
   }
