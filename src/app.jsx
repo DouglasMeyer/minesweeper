@@ -27,6 +27,12 @@ class App extends Component {
     };
   }
 
+  constructor(){
+    super();
+    this.onFlag = this.onFlag.bind(this);
+    this.onUnflag = this.onUnflag.bind(this);
+  }
+
   onWheel(e){
     this.props.onScroll({ dx: e.deltaX, dy: e.deltaY });
   }
@@ -51,13 +57,23 @@ class App extends Component {
     });
   }
 
+  onFlag(){
+    const { onFlag, info: { currentGame: { seed } } } = this.props;
+    onFlag(seed, ...arguments);
+  }
+
+  onUnflag(){
+    const { onUnflag, info: { currentGame: { seed } } } = this.props;
+    onUnflag(seed, ...arguments);
+  }
+
   render(){
     const {
       fields, position, info,
-      onReveal, onFlag, onUnflag,
+      onReveal,
       onKeyDown, onKeyUp
     } = this.props;
-    const { peerId, currentGame: { reveals, seed } } = info;
+    const { peerId, currentGame: { reveals } } = info;
     const { isGameOver } = reveals[peerId];
 
     return <div
@@ -79,8 +95,8 @@ class App extends Component {
         fields={ fields }
         position={ position }
         onReveal={ onReveal }
-        onFlag={ onFlag.bind(null, seed) }
-        onUnflag={ onUnflag.bind(null, seed) }
+        onFlag={ this.onFlag }
+        onUnflag={ this.onUnflag }
       ></Fields>
       <PeerIntegration />
       <Routing />
