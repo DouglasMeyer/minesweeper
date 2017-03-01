@@ -123,10 +123,13 @@ const keyMap = {
 };
 const downedKeys = [];
 let moving = false;
-export function keyDown(key){
+export function keyDown(event){
+  const key = event.nativeEvent.code || event.nativeEvent.key;
   if (!keyMap.hasOwnProperty(key) || downedKeys.indexOf(key) !== -1) return _ => {};
+  event.preventDefault();
   downedKeys.push(key);
   if (moving) return _ => {};
+  moving = true;
 
   return dispatch => {
     let lastTime;
@@ -141,7 +144,7 @@ export function keyDown(key){
             dy: posD.dy + keyMapping.y * step
           };
         }, { dx: 0, dy: 0 });
-      moving = dx || dy;
+      moving = downedKeys.length !== 0;
       if (moving){
         lastTime = time;
         requestAnimationFrame(move);
@@ -153,7 +156,8 @@ export function keyDown(key){
   };
 }
 
-export function keyUp(key){
+export function keyUp(event){
+  const key = event.nativeEvent.code || event.nativeEvent.key;
   const index = downedKeys.indexOf(key);
   if (index !== -1) downedKeys.splice(index, 1);
   return _ => {};

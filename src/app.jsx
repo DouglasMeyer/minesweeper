@@ -86,9 +86,9 @@ class App extends Component {
       ref="root"
       onKeyDown={ e =>{
         if (e.target.nodeName === "INPUT") return;
-        onKeyDown(e.nativeEvent.code || e.nativeEvent.key);
+        onKeyDown(e);
       } }
-      onKeyUp={ e => onKeyUp(e.nativeEvent.code || e.nativeEvent.key) }
+      onKeyUp={ onKeyUp }
       onWheel={ this.onWheel.bind(this) }
       onTouchStart={ this.onTouchStart.bind(this) }
       onTouchMove={ this.onTouchMove.bind(this) }
