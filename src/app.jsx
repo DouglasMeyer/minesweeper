@@ -57,6 +57,10 @@ class App extends Component {
     });
   }
 
+  componentDidMount(){
+    this.refs.root.focus();
+  }
+
   onFlag(){
     const { onFlag, info: { currentGame: { seed } } } = this.props;
     onFlag(seed, ...arguments);
@@ -79,7 +83,7 @@ class App extends Component {
     return <div
       className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
       tabIndex={0}
-      ref={ el => el && el.focus() }
+      ref="root"
       onKeyDown={ e =>{
         if (e.target.nodeName === "INPUT") return;
         onKeyDown(e.nativeEvent.code || e.nativeEvent.key);
