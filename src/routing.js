@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 import { setSafeStart, setGameMode, setNextGameMode, setNextSafeStart, setPeers } from './actions';
 
-function hash(options, ...peers){
+function encode(options, ...peers){
   const shouldShowPeers = peers.length && options.gameMode === 'cooperative';
   const query = shouldShowPeers ? Object.assign({}, options, { peers }) : options;
   return Object.keys(query)
@@ -16,6 +16,31 @@ function hash(options, ...peers){
       `${k}=${query[k]}`
     )
     .join(',');
+}
+
+function decode(hash){
+  return hash
+    .slice(1)
+    .split(',')
+    .reduce((hash,str) => {
+      const [ key, value ] = str.split("=");
+      const trueValue = value === undefined ? true : value;
+      if (key === '') return hash;
+      const arrayParam = key.match(/^(.+)\[(\d*)\]/);
+      if (arrayParam){
+        const [_match, arrayKey, arrayIndex] = arrayParam;
+        if (!hash[arrayKey]) hash[arrayKey] = [];
+        if (arrayIndex) hash[arrayKey][arrayIndex] = trueValue;
+        else hash[arrayKey].push(trueValue);
+      } else {
+        hash[key] = trueValue;
+      }
+      return hash;
+    }, {
+      gameMode: 'normal',
+      safeStart: false,
+      peers: []
+    });
 }
 
 class Routing extends Component {
@@ -42,34 +67,26 @@ class Routing extends Component {
       onSetGameMode, onSetSafeStart, onSetNextGameMode, onSetNextSafeStart, onSetPeers
     } = this.props;
 
-    const hashOptions = location.hash
-      .slice(1)
-      .split(',')
-      .reduce((hash,str) => {
-        const [ key, value ] = str.split("=");
-        const trueValue = value === undefined ? true : value;
-        if (key === '') return hash;
-        const arrayParam = key.match(/^(.+)\[(\d*)\]/);
-        if (arrayParam){
-          const [_match, arrayKey, arrayIndex] = arrayParam;
-          if (!hash[arrayKey]) hash[arrayKey] = [];
-          if (arrayIndex) hash[arrayKey][arrayIndex] = trueValue;
-          else hash[arrayKey].push(trueValue);
-        } else {
-          hash[key] = trueValue;
-        }
-        return hash;
-      }, {
-        gameMode: 'normal',
-        safeStart: false,
-        peers: []
-      });
+    const hashOptions = decode(location.hash);
 
     onSetGameMode(hashOptions.gameMode);
     onSetSafeStart(hashOptions.safeStart);
     onSetNextGameMode(hashOptions.gameMode);
     onSetNextSafeStart(hashOptions.safeStart);
     onSetPeers(hashOptions.peers);
+
+    window.addEventListener('hashchange', ()=>{
+      const {
+        gameMode, safeStart, peers
+      } = this.props;
+      const hashOptions = decode(location.hash);
+      const hash = encode({ gameMode: hashOptions.gameMode, safeStart: hashOptions.safeStart }, ...hashOptions.peers);
+      if (hash !== location.hash) location.hash = hash;
+
+      if (hashOptions.gameMode !== gameMode) onSetNextGameMode(hashOptions.gameMode);
+      if (hashOptions.safeStart !== safeStart) onSetNextSafeStart(hashOptions.safeStart);
+      if (hashOptions.peers.join(',') !== peers.join(',')) onSetPeers(hashOptions.peers);
+    });
   }
 
   render(){
@@ -77,7 +94,7 @@ class Routing extends Component {
       gameMode, safeStart, peers
     } = this.props;
 
-    location.hash = hash({ gameMode, safeStart }, ...peers);
+    location.hash = encode({ gameMode, safeStart }, ...peers);
 
     return false;
   }
