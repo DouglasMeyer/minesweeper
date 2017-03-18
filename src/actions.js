@@ -125,8 +125,9 @@ const downedKeys = [];
 let moving = false;
 export function keyDown(event){
   const key = event.nativeEvent.code || event.nativeEvent.key;
-  if (!keyMap.hasOwnProperty(key) || downedKeys.indexOf(key) !== -1) return _ => {};
-  event.preventDefault();
+  const inKeyMap = keyMap.hasOwnProperty(key);
+  if (inKeyMap || key === 'Backspace') event.preventDefault();
+  if (!inKeyMap || downedKeys.indexOf(key) !== -1) return _ => {};
   downedKeys.push(key);
   if (moving) return _ => {};
   moving = true;

@@ -82,6 +82,7 @@ class App extends Component {
 
     return <div
       className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
+      onBlur={ e=> setTimeout(()=> e.target.focus()) }
       tabIndex={0}
       ref="root"
       onKeyDown={ e =>{
