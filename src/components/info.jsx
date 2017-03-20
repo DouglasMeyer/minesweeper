@@ -6,15 +6,15 @@ import PureRenderMixin from 'react-addons-pure-render-mixin';
 import { revealSafe, newGame, setNextGameMode, setNextSafeStart } from '../actions';
 require('./info.css');
 
-function RevealSummary({ bestHardcore, revealCount }){
+function RevealSummary({ best, score }){
+  const top = best ? <small>best: { best }</small> : false;
   return <div className='info_summary'>
-    <small>current &lt; best</small>
-    <div>Score: { revealCount } <small>&lt; { bestHardcore }</small></div>
+    <div>Score: { score } { top }</div>
   </div>;
 }
 RevealSummary.propTypes = {
-  bestHardcore: PropTypes.number,
-  revealCount: PropTypes.number.isRequired
+  best: PropTypes.number,
+  score: PropTypes.number.isRequired
 };
 
 class Info extends Component {
@@ -86,7 +86,7 @@ class Info extends Component {
     const gameModeDescription = gameModes.find(m => m.value === nextGameMode).description;
 
     return <div className='info'>
-      <RevealSummary revealCount={revealCount} bestHardcore={bestHardcore} />
+      <RevealSummary score={revealCount} best={bestHardcore} />
       { newGame }
       <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
       <div className="info_gameMode">

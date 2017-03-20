@@ -4,7 +4,7 @@
   position: absolute;
   z-index: 2;
   left: 1rem;
-  top: 2.75rem;
+  top: 2rem;
   transition: all 0.2s;
   padding: 1rem 0.5rem 0.5rem;
   border-radius: 0.5rem;
@@ -15,7 +15,7 @@
   transform: translateY(-100%);
 }
 .info:hover, .app-is_game_over .info {
-  transform: translateY(-3.75rem); /* -top - 1 */
+  transform: translateY(-3rem); /* -top - 1 */
 }
 .info > * {
   padding-top: 0.5em;
@@ -61,9 +61,11 @@
   border-bottom: 1px solid #000;
   padding: 0.5em;
   margin: 0;
+  cursor: pointer;
 }
 .info_gameMode_modes > *.selected {
   color: white;
+  cursor: default;
 }
 .info_gameMode_modes > *:first-child {
   border-left: none;
