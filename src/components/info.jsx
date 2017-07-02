@@ -77,6 +77,10 @@ class Info extends Component {
         <a onClick={ this.onNewGame.bind(this) }>start a new game</a>
         .
       </small>;
+    } else if (gameMode === 'cooperative') {
+      newGame = <small>
+        <a onClick={ this.onNewGame.bind(this) }>Goto next map</a>.
+      </small>;
     }
     const gameModes =
     [ { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' }
@@ -106,14 +110,20 @@ class Info extends Component {
   }
 }
 const connectedInfo = connect(
-  state => ({
-    bestHardcore: state.info.bestHardcore,
-    peerId: state.info.peerId,
-    reveals: state.info.currentGame.reveals,
-    safeStart: state.info.currentGame.safeStart,
-    gameMode: state.info.currentGame.gameMode,
-    nextSafeStart: state.info.nextGame.safeStart,
-    nextGameMode: state.info.nextGame.gameMode
+  ({
+    info: {
+      bestHardcore, peerId,
+      currentGame: { reveals, safeStart, gameMode },
+      nextGames
+    }
+  }) => ({
+    bestHardcore,
+    peerId,
+    reveals,
+    safeStart,
+    gameMode,
+    nextSafeStart: nextGames.slice(-1)[0].safeStart,
+    nextGameMode: nextGames.slice(-1)[0].gameMode
   }),
   dispatch => ({
     onRevealSafe: () => dispatch(revealSafe()),

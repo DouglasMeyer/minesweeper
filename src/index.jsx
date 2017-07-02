@@ -9,8 +9,8 @@ import thunk from 'redux-thunk';
 import * as actions from './actions';
 export { actions };
 
-import reducers from './reducers';
-import App from './app.jsx';
+import reducers from './reducers'; // eslint-disable-line import/first
+import App from './app.jsx'; // eslint-disable-line import/first
 
 export const store = createStore(
   reducers,

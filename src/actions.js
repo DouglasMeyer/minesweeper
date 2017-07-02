@@ -10,6 +10,7 @@ export const FLAG = 'FLAG';
 export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
+export const SET_GAME_SEEDS = 'SET_GAME_SEEDS';
 export const SET_GAME_MODE = 'SET_GAME_MODE';
 export const SET_SAFE_START = 'SET_SAFE_START';
 export const SET_NEXT_GAME_MODE = 'SET_NEXT_GAME_MODE';
@@ -168,8 +169,20 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-export function newGame({ currentGame, nextGame, positionsToReveal, positionsToFlag }={}){
-  return { type: NEW_GAME, currentGame, nextGame, positionsToReveal, positionsToFlag };
+const newSeed = Math.seedrandom.bind(null, null, { pass: (_prng, seed)=> seed });
+export function newGame(gameProps={}){
+  return (dispatch, getState)=>{
+    dispatch(Object.assign({}, gameProps, { type: NEW_GAME }));
+    const { info: { previousGames, currentGame, nextGames } } = getState();
+    if (nextGames.length < 1) {
+      dispatch({ type: SET_GAME_SEEDS, gameSeeds: [
+        ...previousGames.map(g => g.seed),
+        currentGame.seed,
+        ...nextGames.map(g => g.seed),
+        newSeed()
+      ] });
+    }
+  };
 }
 
 export function setGameMode(gameMode){

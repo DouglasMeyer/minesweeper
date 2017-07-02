@@ -28,7 +28,7 @@ function init(){
     peerId: 'solo',
     previousGames: [],
     currentGame: newGame(undefined, 'solo'),
-    nextGame: newGame(undefined, 'solo')
+    nextGames: [ newGame(undefined, 'solo') ]
   };
 }
 
@@ -36,9 +36,10 @@ export default function info(_state, action){
   const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: init() });
 
   const r = {
-    [NEW_GAME]: ({ currentGame = state.info.nextGame, nextGame })=>{
+    [NEW_GAME]: ({ currentGame = state.info.nextGames[0], nextGames = state.info.nextGames.slice(1) })=>{
       const previousGames = state.info.previousGames.concat([ state.info.currentGame ]);
       const { peerId } = state.info;
+      if (!nextGames[0]) nextGames = [ newGame(Object.assign({}, currentGame, { seed: null }), peerId) ];
       return Object.assign({}, state, {
         info: Object.assign({}, state.info, {
           previousGames,
@@ -47,7 +48,7 @@ export default function info(_state, action){
               [peerId]: currentGame.reveals[peerId] || { count: 0, isGameOver: false }
             })
           }),
-          nextGame: nextGame || newGame(Object.assign({}, currentGame, { seed: null }), peerId)
+          nextGames
         })
       });
     },
@@ -107,10 +108,16 @@ export default function info(_state, action){
       currentGame: Object.assign({}, state.info.currentGame, { safeStart })
     }) }),
     [SET_NEXT_GAME_MODE]: ({ gameMode }) => Object.assign({}, state, { info: Object.assign({}, state.info, {
-      nextGame: Object.assign({}, state.info.nextGame, { gameMode })
+      nextGames: [
+        ...state.info.nextGames.slice(0,-1),
+        Object.assign({}, state.info.nextGames.slice(-1)[0], { gameMode })
+      ]
     }) }),
     [SET_NEXT_SAFE_START]: ({ safeStart }) => Object.assign({}, state, { info: Object.assign({}, state.info, {
-      nextGame: Object.assign({}, state.info.nextGame, { safeStart })
+      nextGames: [
+        ...state.info.nextGames.slice(0,-1),
+        Object.assign({}, state.info.nextGames.slice(-1)[0], { safeStart })
+      ]
     }) })
   }[action.type];
   return r ? r(action) : state;

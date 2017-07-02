@@ -101,7 +101,7 @@ class Routing extends Component {
 }
 const connectedRouting = connect(
   ({ peers, info }) => {
-    const { safeStart, gameMode } = info.nextGame;
+    const { safeStart, gameMode } = info.nextGames.slice(-1)[0];
     return { safeStart, gameMode, peers };
   },
   dispatch => ({
