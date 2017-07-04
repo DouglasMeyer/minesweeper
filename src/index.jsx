@@ -32,11 +32,10 @@ if (!performance.now){
 }
 
 document.addEventListener("DOMContentLoaded", function(){
-  render((
-      <Provider store={store}>
-        <App></App>
-      </Provider>
-    ),
+  render(
+    <Provider store={store}>
+      <App></App>
+    </Provider>,
     document.getElementById('container')
   );
 

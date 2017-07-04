@@ -6,6 +6,8 @@
   "scripts": {
     "start": "NODE_ENV=development node ./dev_server.js",
     "build": "rm -rf dist/* ; webpack -p",
+    "test": "mocha-webpack --webpack-config webpack.config.js \"src/**/*.test.js\"",
+    "test:watch": "mocha-webpack --watch --webpack-config webpack.config.js \"src/**/*.test.js\"",
     "deploy": "npm run build && cd dist && git add -A . && git commit"
   },
   "author": "",
@@ -31,6 +33,9 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
     "extract-text-webpack-plugin": "^1.0.1",
+    "mocha": "^3.4.2",
+    "mocha-loader": "^1.1.1",
+    "mocha-webpack": "^0.7.0",
     "postcss-loader": "^0.9.1",
     "preact": "",
     "preact-compat": "",
@@ -41,7 +46,7 @@
     "seedrandom": "",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
-    "webpack": "^1.12.2",
+    "webpack": "^1.15.0",
     "webpack-dev-server": "^1.12.1"
   }
 }

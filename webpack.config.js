@@ -20,11 +20,7 @@ module.exports = {
     loaders: [
       {
         test: /\.jsx?$/,
-        loader: 'babel',
-        query: {
-          presets: [ 'react', 'es2015' ],
-          plugins: [ 'transform-es3-member-expression-literals', 'transform-es3-property-literals' ]
-        }
+        loader: 'babel'
       },
       {
         test: /\.css$/,

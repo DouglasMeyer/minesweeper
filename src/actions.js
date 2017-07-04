@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { nineSquare, cellAt, fieldSize } from './helpers';
+import { nineSquare, cellAt, fieldSize, newSeed } from './helpers';
 
 /*
  * action types
@@ -169,7 +169,6 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-const newSeed = Math.seedrandom.bind(null, null, { pass: (_prng, seed)=> seed });
 export function newGame(gameProps={}){
   return (dispatch, getState)=>{
     dispatch(Object.assign({}, gameProps, { type: NEW_GAME }));
