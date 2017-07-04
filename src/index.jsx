@@ -12,10 +12,21 @@ export { actions };
 import reducers from './reducers'; // eslint-disable-line import/first
 import App from './app.jsx'; // eslint-disable-line import/first
 
+const stateKey = 'minesweeper.state';
+let initialState = null;
+try {
+  initialState = JSON.parse(localStorage.getItem(stateKey));
+} catch (e) { console.error(e); } // eslint-disable-line no-console
 export const store = createStore(
   reducers,
+  initialState,
   applyMiddleware(thunk)
 );
+store.subscribe(function(){
+  try {
+    localStorage.setItem(stateKey, JSON.stringify(store.getState()));
+  } catch (e) { console.error(e); } // eslint-disable-line no-console
+});
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){

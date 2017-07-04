@@ -7,34 +7,21 @@ function seed(num){
   return String.fromCharCode.apply(0, new Array(256).fill(num));
 }
 describe('reducers', function(){
-  let seedId = 34;
-  before(function(){
-    global.localStorage = { getItem: () => 8 };
-    global.crypto = { getRandomValues: array => array.fill(++seedId) };
-  });
-  after(function(){
-    delete global.localStorage;
-    delete global.crypto;
-  });
-
   describe('init', function(){
     it('sets currentGame and nextGames', function(){
       const state = reducers({}, {});
       assert.deepEqual(state.info, {
-        bestHardcore: 8,
-        peerId: 'solo',
-        previousGames: [],
-        currentGame: {
-          gameMode: 'normal',
+        bestHardcore: null,
+        map: {
+          exploded: false,
+          isPractice: false,
           safeStart: false,
-          reveals: { solo: { count: 0, isGameOver: false } },
-          seed: seed(seedId-1)
+          reveals: { solo: { count: 0, isGameOver: false } }
         },
         nextGames: [ {
           gameMode: 'normal',
           safeStart: false,
-          reveals: { solo: { count: 0, isGameOver: false } },
-          seed: seed(seedId)
+          reveals: { solo: { count: 0, isGameOver: false } }
         } ]
       });
     });
