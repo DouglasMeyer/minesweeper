@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 
 import Fields from './components/fields.jsx';
 import Info from './components/info.jsx';
-import { PeerIntegration } from './peer_integration';
-import { Routing } from './routing';
 import { reveal, flag, unflag, keyDown, keyUp, scroll } from './actions';
 
 class App extends Component {
@@ -62,12 +60,12 @@ class App extends Component {
   }
 
   onFlag(){
-    const { onFlag, info: { currentGame: { seed } } } = this.props;
+    const { onFlag, info: { map: { seed } } } = this.props;
     onFlag(seed, ...arguments);
   }
 
   onUnflag(){
-    const { onUnflag, info: { currentGame: { seed } } } = this.props;
+    const { onUnflag, info: { map: { seed } } } = this.props;
     onUnflag(seed, ...arguments);
   }
 
@@ -77,11 +75,10 @@ class App extends Component {
       onReveal,
       onKeyDown, onKeyUp
     } = this.props;
-    const { peerId, currentGame: { reveals } } = info;
-    const { isGameOver } = reveals[peerId];
+    const { map: { exploded } } = info;
 
     return <div
-      className={ `app${isGameOver ? ' app-is_game_over' : ''}` }
+      className={ `app${exploded ? ' app-is_game_over' : ''}` }
       onBlur={ e=> setTimeout(()=> e.target.focus()) }
       tabIndex={0}
       ref="root"
@@ -103,8 +100,6 @@ class App extends Component {
         onFlag={ this.onFlag }
         onUnflag={ this.onUnflag }
       ></Fields>
-      <PeerIntegration />
-      <Routing />
     </div>;
   }
 }

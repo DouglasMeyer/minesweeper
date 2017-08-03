@@ -21,24 +21,18 @@ class Info extends Component {
   static get propTypes(){
     return {
       bestHardcore: PropTypes.number,
-      peerId: PropTypes.string.isRequired,
-      reveals: PropTypes.objectOf(PropTypes.shape({
-        count: PropTypes.number.isRequired,
-        isGameOver: PropTypes.bool.isRequired
-      })).isRequired,
-      safeStart: PropTypes.bool,
-      gameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
-      nextSafeStart: PropTypes.bool,
-      nextGameMode: PropTypes.oneOf('normal learning cooperative'.split(' ')),
+      revealCount: PropTypes.number.isRequired,
+      safeStart: PropTypes.bool.isRequired,
+      isPractice: PropTypes.bool.isRequired,
       onNewGame: PropTypes.func.isRequired,
-      onRevealSafe: PropTypes.func.isRequired,
-      onSetNextSafeStart: PropTypes.func.isRequired,
-      onSetNextGameMode: PropTypes.func.isRequired
+      onRevealSafe: PropTypes.func.isRequired
     };
   }
 
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
+    const { safeStart, isPractice } = props;
+    this.state = { safeStart, isPractice };
     this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this);
   }
 
@@ -47,7 +41,8 @@ class Info extends Component {
   }
 
   onNewGame(){
-    this.props.onNewGame();
+    const { safeStart, isPractice } = this.state;
+    this.props.onNewGame({ safeStart, isPractice });
     setTimeout(this.revealIfSafeStart.bind(this));
   }
 
@@ -60,16 +55,15 @@ class Info extends Component {
 
   render(){
     const {
-      bestHardcore, peerId, reveals, safeStart, gameMode, nextSafeStart, nextGameMode,
-      onSetNextSafeStart, onSetNextGameMode
+      bestHardcore, revealCount
     } = this.props;
-    const { count: revealCount } = reveals[peerId];
+    const { safeStart, isPractice } = this.state;
 
     const optionsChanged =
-      safeStart !== nextSafeStart ||
-      gameMode !== nextGameMode;
+      safeStart !== this.props.safeStart ||
+      isPractice !== this.props.isPractice;
     let newGame = <small>
-      <a onClick={ this.onNewGame.bind(this) }>Start a new game</a>.
+      <a onClick={ this.onNewGame.bind(this) }>Start next map</a>.
     </small>;
     if (optionsChanged){
       newGame = <small>
@@ -77,34 +71,26 @@ class Info extends Component {
         <a onClick={ this.onNewGame.bind(this) }>start a new game</a>
         .
       </small>;
-    } else if (gameMode === 'cooperative') {
-      newGame = <small>
-        <a onClick={ this.onNewGame.bind(this) }>Goto next map</a>.
-      </small>;
     }
-    const gameModes =
-    [ { value: 'normal', title: 'Normal', description: 'Play until you hit a mine.' }
-    , { value: 'learning', title: 'Learning', description: 'When you hit a mine, you can keep going.' }
-    , { value: 'cooperative', title: 'Cooperative', description: 'Work with others to reveal the same map. But once you click a mine, you are out.' }
-    ];
-    const gameModeDescription = gameModes.find(m => m.value === nextGameMode).description;
 
     return <div className='info'>
       <RevealSummary score={revealCount} best={bestHardcore} />
       { newGame }
-      <label className='option'><input type='checkbox' checked={ nextSafeStart } onChange={ onSetNextSafeStart.bind(null, !nextSafeStart) } />Safe start</label>
+      <label className='option'><input type='checkbox' checked={ safeStart } onChange={ () => { this.setState({ safeStart: !safeStart }); } } />Safe start</label>
       <div className="info_gameMode">
         <div className="info_gameMode_modes">
-          { gameModes.map(({ value, title })=>
-            <h5 key={ value }
-              className={ value === nextGameMode ? "selected" : "" }
-              onClick={ onSetNextGameMode.bind(null, value) }
-            >
-              { title }
-            </h5>
-          , this) }
+          <h5 className={ !isPractice ? "selected" : "" }
+            onClick={ () => { this.setState({ isPractice: false }); } }
+          >Normal</h5>
+          <h5 className={ isPractice ? "selected" : "" }
+            onClick={ () => { this.setState({ isPractice: true }); } }
+          >Practice</h5>
         </div>
-        <div className="info_gameMode_description">{ gameModeDescription }</div>
+        <div className="info_gameMode_description">{
+          isPractice
+            ? 'When you hit a mine, you can keep going.'
+            : 'Play until you hit a mine.'
+        }</div>
       </div>
     </div>;
   }
@@ -112,22 +98,18 @@ class Info extends Component {
 const connectedInfo = connect(
   ({
     info: {
-      bestHardcore, peerId,
-      currentGame: { reveals, safeStart, gameMode },
-      nextGames
+      bestHardcore,
+      map: { revealCount, safeStart, isPractice }
     }
   }) => ({
     bestHardcore,
-    peerId,
-    reveals,
+    revealCount,
     safeStart,
-    gameMode,
-    nextSafeStart: nextGames.slice(-1)[0].safeStart,
-    nextGameMode: nextGames.slice(-1)[0].gameMode
+    isPractice
   }),
   dispatch => ({
     onRevealSafe: () => dispatch(revealSafe()),
-    onNewGame: () => dispatch(newGame()),
+    onNewGame: options => dispatch(newGame(options)),
     onSetNextGameMode: gameMode => dispatch(setNextGameMode(gameMode)),
     onSetNextSafeStart: safeStart => dispatch(setNextSafeStart(safeStart))
   })

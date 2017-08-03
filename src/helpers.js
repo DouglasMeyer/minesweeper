@@ -1,3 +1,5 @@
+import 'seedrandom';
+
 export const fieldSize = 10;
 
 export function neighborIndexes(size, index){
@@ -25,8 +27,4 @@ export function cellAt(fields, x, y){
   return field.cells[(y - fy * fieldSize) * fieldSize + (x - fx * fieldSize)];
 }
 
-export function newSeed(){
-  const out = new Uint8Array(256);
-  (global.crypto || global.msCrypto).getRandomValues(out);
-  return String.fromCharCode.apply(0, out);
-}
+export const newSeed = Math.seedrandom.bind(null, null, { pass: (_prng, seed)=> seed });

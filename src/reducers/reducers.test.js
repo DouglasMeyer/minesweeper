@@ -1,51 +1,43 @@
-/* globals describe it before after */
+/* eslint-env mocha */
 import reducers from '.';
 
 var assert = require('assert');
 
-function seed(num){
-  return String.fromCharCode.apply(0, new Array(256).fill(num));
-}
 describe('reducers', function(){
   describe('init', function(){
-    it('sets currentGame and nextGames', function(){
+    it('sets info', function(){
       const state = reducers({}, {});
+      delete state.info.map.seed;
       assert.deepEqual(state.info, {
         bestHardcore: null,
         map: {
           exploded: false,
           isPractice: false,
           safeStart: false,
-          reveals: { solo: { count: 0, isGameOver: false } }
-        },
-        nextGames: [ {
-          gameMode: 'normal',
-          safeStart: false,
-          reveals: { solo: { count: 0, isGameOver: false } }
-        } ]
+          revealCount: 0
+        }
       });
     });
   });
 
   describe('NEW_GAME', function(){
-    it('sets currentGame to the nextGame and ensures nextGames', function(){
-      const gameMode = 'normal';
-      const safeStart = false;
-      const reveals = { solo: { count: 0, isGameOver: false } };
+    it('sets info.map', function(){
       const oldState = { info: {
         bestHardcore: 8,
-        peerId: 'solo',
-        previousGames: [],
-        currentGame: { gameMode, safeStart, reveals, seed: seed(35) },
-        nextGames: [ { gameMode, safeStart, reveals, seed: seed(36) } ]
+        map: { seed: "???", exploded: true, isPractice: true, safeStart: false, revealCount: 100 }
       }};
-      const state = reducers(oldState, { type: 'NEW_GAME' });
+      const state = reducers(oldState, { type: 'NEW_GAME', isPractice: false, safeStart: true });
 
-      assert.deepEqual(state.info.previousGames, [ oldState.info.currentGame ]);
-      assert.deepEqual(state.info.currentGame, oldState.info.nextGames[0]);
-      assert.deepEqual(state.info.nextGames, [
-        { gameMode, safeStart, reveals, seed: seed(seedId) }
-      ]);
+      delete state.info.map.seed;
+      assert.deepEqual(state.info, {
+        bestHardcore: 8,
+        map: {
+          exploded: false,
+          isPractice: false,
+          safeStart: true,
+          revealCount: 0
+        }
+      });
     });
   });
 });

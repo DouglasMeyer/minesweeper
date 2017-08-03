@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { nineSquare, cellAt, fieldSize, newSeed } from './helpers';
+import { nineSquare, cellAt, fieldSize } from './helpers';
 
 /*
  * action types
@@ -10,16 +10,6 @@ export const FLAG = 'FLAG';
 export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
-export const SET_GAME_SEEDS = 'SET_GAME_SEEDS';
-export const SET_GAME_MODE = 'SET_GAME_MODE';
-export const SET_SAFE_START = 'SET_SAFE_START';
-export const SET_NEXT_GAME_MODE = 'SET_NEXT_GAME_MODE';
-export const SET_NEXT_SAFE_START = 'SET_NEXT_SAFE_START';
-export const PEER_OPEN = 'PEER_OPEN';
-export const PEER_CONNECTED = 'PEER_CONNECTED';
-export const PEER_DISCONNECTED = 'PEER_DISCONNECTED';
-export const SET_PEERS = 'SET_PEERS';
-export const PEER_UNAVAILABLE = 'PEER_UNAVAILABLE';
 
 /*
  * action creators
@@ -34,13 +24,12 @@ export function reveal(...positions){
     if (revealing) return;
     requestAnimationFrame(doReveal);
     revealing = true;
-    const { seed } = getState().info.currentGame;
+    const { info: { map: { seed } } } = getState();
 
     function doReveal(){
       revealing = false;
-      const { fields, info: { peerId, currentGame: { reveals } } } = getState();
-      const { isGameOver } = reveals[peerId];
-      if (isGameOver){
+      const { fields, info: { map: { exploded } } } = getState();
+      if (exploded){
         positionsToReveal = [];
         return;
       }
@@ -50,7 +39,7 @@ export function reveal(...positions){
       });
       if (positionsToReveal.length === 0) return;
       const positionsToRevealNow = positionsToReveal.splice(0, 20);
-      dispatch({ type: REVEAL, seed, peerId, positions: positionsToRevealNow });
+      dispatch({ type: REVEAL, seed, positions: positionsToRevealNow });
 
       positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
@@ -90,9 +79,8 @@ export function revealSafe(){
 
 export function flag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { peerId, currentGame: { reveals } } } = getState();
-    const { isGameOver } = reveals[peerId];
-    if (!isGameOver){
+    const { info: { map: { exploded } } } = getState();
+    if (!exploded){
       dispatch({ type: FLAG, seed, positions: [ position ] });
     }
   };
@@ -100,9 +88,8 @@ export function flag(seed, position){
 
 export function unflag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { peerId, currentGame: { reveals } } } = getState();
-    const { isGameOver } = reveals[peerId];
-    if (!isGameOver){
+    const { info: { map: { exploded } } } = getState();
+    if (!exploded){
       dispatch({ type: UNFLAG, seed, positions: [ position ] });
     }
   };
@@ -169,53 +156,6 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-export function newGame(gameProps={}){
-  return (dispatch, getState)=>{
-    dispatch(Object.assign({}, gameProps, { type: NEW_GAME }));
-    const { info: { previousGames, currentGame, nextGames } } = getState();
-    if (nextGames.length < 1) {
-      dispatch({ type: SET_GAME_SEEDS, gameSeeds: [
-        ...previousGames.map(g => g.seed),
-        currentGame.seed,
-        ...nextGames.map(g => g.seed),
-        newSeed()
-      ] });
-    }
-  };
-}
-
-export function setGameMode(gameMode){
-  return { type: SET_GAME_MODE, gameMode };
-}
-
-export function setSafeStart(safeStart){
-  return { type: SET_SAFE_START, safeStart };
-}
-
-export function setNextGameMode(gameMode){
-  return { type: SET_NEXT_GAME_MODE, gameMode };
-}
-
-export function setNextSafeStart(safeStart){
-  return { type: SET_NEXT_SAFE_START, safeStart };
-}
-
-export function peerOpen(peerId){
-  return { type: PEER_OPEN, peerId };
-}
-
-export function peerConnected(peerId){
-  return { type: PEER_CONNECTED, peerId };
-}
-
-export function peerDisconnected(peerId){
-  return { type: PEER_DISCONNECTED, peerId };
-}
-
-export function setPeers(peers){
-  return { type: SET_PEERS, peers };
-}
-
-export function peerUnavailable(peerId){
-  return { type: PEER_UNAVAILABLE, peerId };
+export function newGame({ isPractice, safeStart }){
+  return { type: NEW_GAME, isPractice, safeStart };
 }

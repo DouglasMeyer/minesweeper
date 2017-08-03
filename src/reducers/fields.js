@@ -67,14 +67,11 @@ export function init(seed){
 }
 
 export default function fields(_state, action){
-  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.currentGame.seed) });
+  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.map.seed) });
 
   function delegateActionToIndividualFields(state, action){
-    const { gameOverMove, seed } = state.info.currentGame;
-    if (
-      (gameOverMove && action !== gameOverMove) ||
-      (seed !== action.seed)
-    ) return state;
+    const { info: { map: { seed } } } = state;
+    if (seed !== action.seed) return state;
     const positionsByField = action.positions.reduce((acc, position) => {
       const fx = Math.floor(position.x / fieldSize);
       const fy = Math.floor(position.y / fieldSize);
@@ -88,7 +85,7 @@ export default function fields(_state, action){
     const newState = Array.from(positionsByField.keys())
     .filter(f => !f.loaded)
     .reduce((fields, fieldToLoad) => {
-      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.currentGame.seed));
+      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.map.seed));
     }, state.fields);
     return Object.assign({}, state, {
       fields: newState.map((field, _fieldIndex, fields) => {
@@ -104,15 +101,9 @@ export default function fields(_state, action){
   }
 
   const r = {
-    [NEW_GAME]: ({ positionsToReveal = [], positionsToFlag = [] })=> {
-      const { seed } = state.info.currentGame;
-      const newState = Object.assign({}, state, { fields: init(seed) });
-      const revealAction = { type: REVEAL, seed, positions: positionsToReveal };
-      const flagActions = positionsToFlag.map(position => ({ type: FLAG, seed, positions: [ position ] }));
-      return [
-        revealAction,
-        ...flagActions
-      ].reduce(delegateActionToIndividualFields, newState);
+    [NEW_GAME]: ()=> {
+      const { info: { map: { seed } } } = state;
+      return Object.assign({}, state, { fields: init(seed) });
     },
     [REVEAL]: ()=> delegateActionToIndividualFields(state, action),
     [FLAG]: ()=> delegateActionToIndividualFields(state, action),
