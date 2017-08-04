@@ -15,17 +15,40 @@ import App from './app.jsx'; // eslint-disable-line import/first
 const stateKey = 'minesweeper.state';
 let initialState = null;
 try {
-  initialState = JSON.parse(localStorage.getItem(stateKey));
+  initialState = JSON.parse(localStorage.getItem(stateKey)) || { version: 1 };
+  if (initialState.version === undefined) {
+    console.log('Migrating to version 1');
+    initialState = {
+      version: 1,
+      info: {
+        bestHardcore: initialState.info.bestHardcore,
+        map: {
+          seed: initialState.info.currentGame.seed,
+          exploded: initialState.info.currentGame.reveals.solo.isGameOver,
+          isPractice: initialState.info.currentGame.gameMode === 'learning',
+          safeStart: initialState.info.currentGame.safeStart,
+          revealCount: initialState.info.currentGame.reveals.solo.count
+        }
+      },
+      tracking: initialState.tracking,
+      fields: initialState.fields
+    };
+  }
 } catch (e) { console.error(e); } // eslint-disable-line no-console
 export const store = createStore(
   reducers,
   initialState,
   applyMiddleware(thunk)
 );
+let storeStateTimeout;
 store.subscribe(function(){
-  try {
-    localStorage.setItem(stateKey, JSON.stringify(store.getState()));
-  } catch (e) { console.error(e); } // eslint-disable-line no-console
+  if (storeStateTimeout) clearTimeout(storeStateTimeout);
+  storeStateTimeout = setTimeout(function(){
+    storeStateTimeout = null;
+    try {
+      localStorage.setItem(stateKey, JSON.stringify(store.getState()));
+    } catch (e) { console.error(e); } // eslint-disable-line no-console
+  }, 500);
 });
 
 if (!window.requestAnimationFrame){
