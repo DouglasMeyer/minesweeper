@@ -1,78 +1,29 @@
 .info {
-  display: flex;
-  flex-direction: column-reverse;
   position: absolute;
   z-index: 2;
   left: 1rem;
-  top: 2rem;
-  transition: all 0.2s;
+  top: -0.7rem;
   padding: 1rem 0.5rem 0.5rem;
   border-radius: 0.5rem;
   background-color: rgba(0,0,0, 0.6);
   color: white;
-  font-weight: bold;
   font-family: sans-serif;
-  transform: translateY(-100%);
 }
-.info:hover, .app-is_game_over .info {
-  transform: translateY(-3rem); /* -top - 1 */
-}
-.info > * {
-  padding-top: 0.5em;
-}
-.info a {
-  cursor: pointer;
-  text-decoration: underline;
-}
-.info_summary {
-  text-align: right;
-}
-.info small {
-  font-weight: normal;
-}
-.info_list {
-  margin: 0;
-  padding-left: 2rem;
-  max-height: 100px;
-  overflow-y: auto;
-  border: 1px solid #888;
-}
-.option {
-  font-size: 0.8rem;
-  font-weight: normal;
-}
-
-.info_gameMode {
-  padding: 0;
-  margin-top: 0.5em;
-  border: 1px solid #000;
-  background: rgba(0,0,0, 0.4);
-  color: #AAA;
-  border-radius: 0.5em;
-  font-weight: normal;
-}
-.info_gameMode_modes {
+.info .rows, .info .cols {
   display: flex;
 }
-.info_gameMode_modes > * {
-  flex-grow: 1;
-  text-align: center;
-  border-left: 1px solid #000;
-  border-bottom: 1px solid #000;
-  padding: 0.5em;
-  margin: 0;
-  cursor: pointer;
+.info .rows > *, .info .cols > * {
+  margin: 5px;
 }
-.info_gameMode_modes > *.selected {
-  color: white;
-  cursor: default;
+.info .rows {
+  flex-direction: column;
 }
-.info_gameMode_modes > *:first-child {
-  border-left: none;
+
+.info.currentGame {
+  transition: transform 0.2s;
+  top: calc(2rem - 1px);
+  transform: translateY(-100%);
 }
-.info_gameMode_description {
-  width: 20rem;
-  font-weight: normal;
-  font-size: 0.9rem;
-  padding: 0.5rem;
+.info.currentGame:hover, .app-is_game_over .info.currentGame {
+  transform: translateY(-2.7rem); /* -top - 0.7 */
 }

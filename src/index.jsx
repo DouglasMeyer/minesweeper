@@ -17,7 +17,7 @@ let initialState = null;
 try {
   initialState = JSON.parse(localStorage.getItem(stateKey)) || { version: 1 };
   if (initialState.version === undefined) {
-    console.log('Migrating to version 1');
+    console.log('Migrating to version 1'); // eslint-disable-line no-console
     initialState = {
       version: 1,
       info: {
@@ -50,6 +50,9 @@ store.subscribe(function(){
     } catch (e) { console.error(e); } // eslint-disable-line no-console
   }, 500);
 });
+
+const { info: { map: { seed } } } = store.getState();
+if (!seed) store.dispatch(actions.newGame({ safeStart: true, isPractice: false }));
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){

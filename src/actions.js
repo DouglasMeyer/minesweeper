@@ -1,4 +1,5 @@
 /* eslint-env browser */
+/* global ga */
 import { nineSquare, cellAt, fieldSize } from './helpers';
 
 /*
@@ -10,6 +11,7 @@ export const FLAG = 'FLAG';
 export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
+export const NEW_MAP = 'NEW_MAP';
 
 /*
  * action creators
@@ -157,5 +159,21 @@ export function scroll({ dx, dy }){
 }
 
 export function newGame({ isPractice, safeStart }){
-  return { type: NEW_GAME, isPractice, safeStart };
+  return (dispatch, getState) => {
+    dispatch({ type: NEW_GAME, isPractice, safeStart });
+    newMap()(dispatch, getState);
+  };
+}
+
+export function newMap(){
+  return (dispatch, getState) => {
+    const { info: { map: { safeStart, isPractice } } } = getState();
+    if (window.ga) ga('send', 'event', 'Game', 'NEW_MAP', JSON.stringify({ safeStart, isPractice }));
+
+
+    dispatch({ type: NEW_MAP });
+    if (safeStart) {
+      revealSafe()(dispatch, getState);
+    }
+  };
 }

@@ -1,43 +1,34 @@
 /* eslint-env browser */
-import { REVEAL, NEW_GAME } from '../actions';
+import { REVEAL, NEW_GAME, NEW_MAP } from '../actions';
 import { cellAt, newSeed } from '../helpers';
-
-const bestHardcoreKey = 'minesweeper.bestHardcore';
-
-function buildNewMap({
-  isPractice = false,
-  safeStart = false,
-  seed
-}={}){
-  return {
-    seed: seed || newSeed(),
-    exploded: false,
-    isPractice,
-    safeStart,
-    revealCount: 0
-  };
-}
 
 function init(){
   return {
     bestHardcore: null,
-    map: buildNewMap()
+    map: {
+      revealCount: 0
+    }
   };
-}
-
-function newGame(state, { isPractice, safeStart }){
-  return Object.assign({}, state, {
-    info: Object.assign({}, state.info, {
-      map: buildNewMap({ isPractice, safeStart })
-    })
-  });
 }
 
 export default function info(_state, action){
   const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: init() });
 
   const r = {
-    [NEW_GAME]: newGame,
+    [NEW_GAME]: (state, { isPractice, safeStart }) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, {
+        map: { isPractice, safeStart }
+      })
+    }),
+    [NEW_MAP]: state => Object.assign({}, state, {
+      info: Object.assign({}, state.info, {
+        map: Object.assign({}, state.info.map, {
+          seed: newSeed(),
+          exploded: false,
+          revealCount: 0
+        })
+      })
+    }),
     [REVEAL]: state => {
       if (
         action.seed !== state.info.map.seed
@@ -56,15 +47,8 @@ export default function info(_state, action){
             })
           });
         }
-        let bestHardcore = info.bestHardcore;
-        if (!isPractice && revealCount > bestHardcore) {
-          bestHardcore = revealCount;
-          try {
-            localStorage.setItem(bestHardcoreKey, bestHardcore);
-          } catch (e) { console.error(e); } // eslint-disable-line no-console
-        }
         return Object.assign({}, info, {
-          bestHardcore,
+          bestHardcore: Math.max(info.bestHardcore, revealCount),
           map: Object.assign({}, info.map, { revealCount })
         });
       }, state.info);

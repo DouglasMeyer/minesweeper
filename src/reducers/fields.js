@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG, NEW_GAME } from '../actions';
+import { REVEAL, FLAG, UNFLAG, NEW_MAP } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -101,7 +101,7 @@ export default function fields(_state, action){
   }
 
   const r = {
-    [NEW_GAME]: ()=> {
+    [NEW_MAP]: ()=> {
       const { info: { map: { seed } } } = state;
       return Object.assign({}, state, { fields: init(seed) });
     },
