@@ -2,12 +2,11 @@
 import { REVEAL, NEW_GAME, NEW_MAP, SET_MAP } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
-function newGame({ isPractice, safeStart }){
+function newGame({ kind, isPractice, safeStart }){
   return {
-    isPractice, safeStart,
+    kind, isPractice, safeStart,
     previousMaps: [],
-    map: newMap(),
-    nextMaps: [ newMap() ]
+    nextMaps: []
   };
 }
 
@@ -16,14 +15,11 @@ function newMap({ id, seed=newSeed(), exploded=false }={}){
 }
 
 export default function info(_state, action){
-  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: {
-    bestHardcore: 0,
-    game: newGame({ isPractice: false, safeStart: true })
-  } });
+  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: { bestHardcore: 0 } });
   const r = {
-    [NEW_GAME]: (state, { isPractice, safeStart }) => Object.assign({}, state, {
+    [NEW_GAME]: (state, { kind, isPractice, safeStart }) => Object.assign({}, state, {
       info: Object.assign({}, state.info, {
-        game: newGame({ isPractice, safeStart })
+        game: newGame({ kind, isPractice, safeStart })
       })
     }),
     [NEW_MAP]: (state, { id, seed, exploded }) => Object.assign({}, state, {
@@ -45,7 +41,6 @@ export default function info(_state, action){
 
       const previousMaps = maps.slice(0, mapIndex);
       const nextMaps = maps.slice(mapIndex + 1);
-      if (!nextMaps.length) nextMaps.push(newMap());
 
       return Object.assign({}, state, {
         info: Object.assign({}, state.info, {
@@ -61,9 +56,8 @@ export default function info(_state, action){
       if (
         action.seed !== state.info.game.map.seed
       ) return state;
-      const { fields } = state;
+      const { fields, info: { game: { isPractice } } } = state;
       const newInfo = action.positions.reduce((info, pos) => {
-        const { game: { map: { isPractice } } } = info;
         const cell = cellAt(fields, pos.x, pos.y);
         let { game: { map: { revealCount } } } = info;
         if (!cell.mine) {

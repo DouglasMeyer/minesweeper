@@ -57,8 +57,8 @@ store.subscribe(function(){
   }, 500);
 });
 
-const { info: { game: { safeStart } } } = store.getState();
-if (safeStart) store.dispatch(actions.revealSafe());
+const { info: { game } } = store.getState();
+if (!game) store.dispatch(actions.newGame({ kind: 'solo', isPractice: false, safeStart: true }));
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){

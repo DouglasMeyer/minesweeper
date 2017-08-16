@@ -1,7 +1,7 @@
 /* eslint-env browser */
 import React, { PropTypes, PureComponent as Component } from 'react'; // eslint-disable-line react/no-deprecated
 import { connect } from 'react-redux';
-import { newGame, setMap } from '../actions';
+import { newGame, nextMap } from '../actions';
 require('./info.css');
 
 const CurrentGamePanel = connect(
@@ -9,13 +9,12 @@ const CurrentGamePanel = connect(
     bestHardcore: best,
     game: {
       map: { revealCount: score },
-      nextMaps: [ nextMap, ..._ ]
     }
   } }) => ({
-    score, best, nextMapId: nextMap.id || nextMap.seed
+    score, best
   }),
   (dispatch, props) => ({
-    onSetMap(mapId){ dispatch(setMap(mapId)); },
+    onNextMap(){ dispatch(nextMap()); },
     onChangePannel: props.onChangePannel
   })
 )(
@@ -24,15 +23,14 @@ const CurrentGamePanel = connect(
     static propTypes = {
       score: PropTypes.number.isRequired,
       best: PropTypes.number.isRequired,
-      nextMapId: PropTypes.string.isRequired,
-      onSetMap: PropTypes.func.isRequired,
+      onNextMap: PropTypes.func.isRequired,
       onChangePannel: PropTypes.func.isRequired
     }
     render(){
-      const { score, best, nextMapId, onSetMap, onChangePannel } = this.props;
+      const { score, best, onNextMap, onChangePannel } = this.props;
       return <div className='currentGame info rows'>
         <div className="cols">
-          <button onClick={() => onSetMap(nextMapId)}>next map</button>
+          <button onClick={() => onNextMap()}>next map</button>
           <a onClick={function(){ onChangePannel('new_game'); }}>new game</a>
         </div>
         <div style={{ textAlign: 'right' }}>

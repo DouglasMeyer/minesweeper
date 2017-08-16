@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG, NEW_GAME, SET_MAP } from '../actions';
+import { REVEAL, FLAG, UNFLAG, SET_MAP } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -88,6 +88,7 @@ function delegateActionToIndividualFields(state, action){
 }
 
 function init(state){
+  if (!state.info.game || !state.info.game.map) return state;
   const { info: { game: { map: { seed } } } } = state;
 
   const fields = nineSquare
@@ -104,7 +105,6 @@ export default function fields(_state, action){
   const state = (_state && _state.fields) ? _state : init(_state);
 
   const r = {
-    [NEW_GAME]: ()=> init(state),
     [SET_MAP]: ()=> init(state),
     [REVEAL]: ()=> delegateActionToIndividualFields(state, action),
     [FLAG]: ()=> delegateActionToIndividualFields(state, action),

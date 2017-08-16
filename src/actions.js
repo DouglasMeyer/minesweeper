@@ -164,25 +164,40 @@ export function newGame({ kind, isPractice, safeStart }){
     if (window.ga) ga('send', 'event', 'Game', 'NEW_GAME', JSON.stringify({ kind, safeStart, isPractice }));
     let gameId, mapId, seed = newSeed();
     dispatch({ type: NEW_GAME, kind, isPractice, safeStart });
-    if (safeStart){ dispatch(revealSafe()); }
+    dispatch(nextMap());
   };
 }
 
 export function newMap({ id, seed, exploded = false } = {}){
-  return (dispatch, getState) => {
-    const { info: { game: { safeStart, isPractice } } } = getState();
-    if (window.ga) ga('send', 'event', 'Game', 'NEW_MAP', JSON.stringify({ safeStart, isPractice }));
-    dispatch({ type: NEW_MAP, id, seed, exploded });
-  };
+  return { type: NEW_MAP, id, seed, exploded };
 }
 
 export function setMap(mapId){ // mapId or seed
   return (dispatch, getState) => {
     const {
-      info: { game: safeStart }
+      info: { game: { safeStart, isPractice } }
     } = getState();
+    if (window.ga) ga('send', 'event', 'Game', 'SET_MAP', JSON.stringify({ safeStart, isPractice }));
 
     dispatch({ type: SET_MAP, mapId });
     if (safeStart) dispatch(revealSafe());
+  };
+}
+
+export function nextMap({ createMap = true }={}){
+  return (dispatch, getState) => {
+    const {
+      info: { game: { nextMaps: [
+        map,
+        ..._
+      ] } }
+    } = getState();
+
+    if (!map && createMap) {
+      dispatch(newMap());
+      dispatch(nextMap({ createMap: false }));
+    } else {
+      dispatch(setMap( map.id || map.seed ));
+    }
   };
 }
