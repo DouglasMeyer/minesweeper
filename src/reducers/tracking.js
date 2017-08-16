@@ -1,4 +1,4 @@
-import { MOVE, NEW_GAME } from '../actions';
+import { MOVE, NEW_GAME, SET_MAP } from '../actions';
 
 export function init(){
   return {
@@ -11,6 +11,7 @@ export default function tracking(_state, action){
 
   const r = {
     [NEW_GAME]: ()=> Object.assign({}, state, { tracking: init() }),
+    [SET_MAP]: ()=> Object.assign({}, state, { tracking: init() }),
     [MOVE]: ({ dx, dy })=> Object.assign({}, state, {
         tracking: Object.assign({}, state.tracking, {
           position: {

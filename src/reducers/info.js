@@ -1,55 +1,87 @@
 /* eslint-env browser */
-import { REVEAL, NEW_GAME, NEW_MAP } from '../actions';
+import { REVEAL, NEW_GAME, NEW_MAP, SET_MAP } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
-function init(){
+function newGame({ isPractice, safeStart }){
   return {
-    bestHardcore: null,
-    map: {
-      revealCount: 0
-    }
+    isPractice, safeStart,
+    previousMaps: [],
+    map: newMap(),
+    nextMaps: [ newMap() ]
   };
 }
 
-export default function info(_state, action){
-  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: init() });
+function newMap({ id, seed=newSeed(), exploded=false }={}){
+  return { id, seed, exploded, revealCount: 0 };
+}
 
+export default function info(_state, action){
+  const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: {
+    bestHardcore: 0,
+    game: newGame({ isPractice: false, safeStart: true })
+  } });
   const r = {
     [NEW_GAME]: (state, { isPractice, safeStart }) => Object.assign({}, state, {
       info: Object.assign({}, state.info, {
-        map: { isPractice, safeStart }
+        game: newGame({ isPractice, safeStart })
       })
     }),
-    [NEW_MAP]: state => Object.assign({}, state, {
+    [NEW_MAP]: (state, { id, seed, exploded }) => Object.assign({}, state, {
       info: Object.assign({}, state.info, {
-        map: Object.assign({}, state.info.map, {
-          seed: newSeed(),
-          exploded: false,
-          revealCount: 0
+        game: Object.assign({}, state.info.game, {
+          nextMaps: [
+            ...state.info.game.nextMaps,
+            newMap({ id, seed, exploded })
+          ]
         })
       })
     }),
+    [SET_MAP]: (state, { mapId }) => {
+      const { info: { game: { previousMaps: oldPreviousMaps, map, nextMaps: oldNextMaps } } } = state;
+      const maps = [ ...oldPreviousMaps, map, ...oldNextMaps ].filter(x => x);
+      const setMap = maps.find(m => m.id === mapId || m.seed === mapId);
+      const mapIndex = maps.indexOf(setMap);
+      if (mapIndex === -1) return state;
+
+      const previousMaps = maps.slice(0, mapIndex);
+      const nextMaps = maps.slice(mapIndex + 1);
+      if (!nextMaps.length) nextMaps.push(newMap());
+
+      return Object.assign({}, state, {
+        info: Object.assign({}, state.info, {
+          game: Object.assign({}, state.info.game, {
+            previousMaps,
+            map: setMap,
+            nextMaps
+          })
+        })
+      });
+    },
     [REVEAL]: state => {
       if (
-        action.seed !== state.info.map.seed
+        action.seed !== state.info.game.map.seed
       ) return state;
       const { fields } = state;
       const newInfo = action.positions.reduce((info, pos) => {
-        const { map: { isPractice } } = info;
+        const { game: { map: { isPractice } } } = info;
         const cell = cellAt(fields, pos.x, pos.y);
-        let { map: { revealCount } } = info;
+        let { game: { map: { revealCount } } } = info;
         if (!cell.mine) {
           revealCount += 1;
         } else if (!isPractice) {
           return Object.assign({}, info, {
-            map: Object.assign({}, info.map, {
-              exploded: true
+            game: Object.assign({}, info.game, {
+              map: Object.assign({}, info.game.map, {
+                exploded: true
+              })
             })
           });
         }
         return Object.assign({}, info, {
           bestHardcore: Math.max(info.bestHardcore, revealCount),
-          map: Object.assign({}, info.map, { revealCount })
+          game: Object.assign({}, info.game, {
+            map: Object.assign({}, info.game.map, { revealCount })
+          })
         });
       }, state.info);
       return Object.assign({}, state, { info: newInfo });

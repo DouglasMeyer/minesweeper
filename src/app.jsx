@@ -55,33 +55,29 @@ class App extends Component {
     });
   }
 
-  componentDidMount(){
-    this.refs.root.focus();
-  }
-
   onFlag(){
-    const { onFlag, info: { map: { seed } } } = this.props;
+    const { onFlag, info: { game: { map: { seed } } } } = this.props;
     onFlag(seed, ...arguments);
   }
 
   onUnflag(){
-    const { onUnflag, info: { map: { seed } } } = this.props;
+    const { onUnflag, info: { game: { map: { seed } } } } = this.props;
     onUnflag(seed, ...arguments);
   }
 
   render(){
     const {
-      fields, position, info,
+      fields, position,
+      info: { game: { map: { exploded } } },
       onReveal,
       onKeyDown, onKeyUp
     } = this.props;
-    const { map: { exploded } } = info;
 
     return <div
       className={ `app${exploded ? ' app-is_game_over' : ''}` }
       onBlur={ e=> setTimeout(()=> e.target.focus()) }
       tabIndex={0}
-      ref="root"
+      ref={el => { el && el.focus(); }}
       onKeyDown={ e =>{
         if (e.target.nodeName === "INPUT") return;
         onKeyDown(e);
@@ -99,7 +95,7 @@ class App extends Component {
         onReveal={ onReveal }
         onFlag={ this.onFlag }
         onUnflag={ this.onUnflag }
-      ></Fields>
+      />
     </div>;
   }
 }

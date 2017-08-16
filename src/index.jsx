@@ -22,12 +22,17 @@ try {
       version: 1,
       info: {
         bestHardcore: initialState.info.bestHardcore,
-        map: {
-          seed: initialState.info.currentGame.seed,
-          exploded: initialState.info.currentGame.reveals.solo.isGameOver,
-          isPractice: initialState.info.currentGame.gameMode === 'learning',
-          safeStart: initialState.info.currentGame.safeStart,
-          revealCount: initialState.info.currentGame.reveals.solo.count
+        gameId: initialState.info.gameId,
+        game: {
+          isPractice: initialState.info.game.isPractice,
+          safeStart: initialState.info.game.safeStart,
+          previousMaps: initialState.info.game.previousMaps, // id, seed, exploded, revealCount
+          map: {
+            seed: initialState.info.map.seed,
+            exploded: initialState.info.map.exploded,
+            revealCount: initialState.info.map.revealCount
+          },
+          nextMaps: initialState.info.game.nextMaps // id, seed, exploded, revealCount
         }
       },
       tracking: initialState.tracking,
@@ -35,6 +40,7 @@ try {
     };
   }
 } catch (e) { console.error(e); } // eslint-disable-line no-console
+
 export const store = createStore(
   reducers,
   initialState,
@@ -51,8 +57,8 @@ store.subscribe(function(){
   }, 500);
 });
 
-const { info: { map: { seed } } } = store.getState();
-if (!seed) store.dispatch(actions.newGame({ safeStart: true, isPractice: false }));
+const { info: { game: { safeStart } } } = store.getState();
+if (safeStart) store.dispatch(actions.revealSafe());
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){

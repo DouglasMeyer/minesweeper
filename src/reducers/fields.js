@@ -1,4 +1,4 @@
-import { REVEAL, FLAG, UNFLAG, NEW_MAP } from '../actions';
+import { REVEAL, FLAG, UNFLAG, NEW_GAME, SET_MAP } from '../actions';
 import fieldReducer from './field';
 import { neighborIndexes, nineSquare, fieldSize } from '../helpers';
 
@@ -56,55 +56,56 @@ function ensureFieldWithNeighbors(field, fields){
   });
 }
 
-export function init(seed){
-  return nineSquare
+function delegateActionToIndividualFields(state, action){
+  const { info: { game: { map: { seed } } } } = state;
+  if (seed !== action.seed) return state;
+  const positionsByField = action.positions.reduce((acc, position) => {
+    const fx = Math.floor(position.x / fieldSize);
+    const fy = Math.floor(position.y / fieldSize);
+    const field = state.fields.find(field => field.position.x === fx && field.position.y === fy);
+    if (!acc.has(field)) acc.set(field, []);
+    const positions = acc.get(field);
+    positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
+    acc.set(field, positions);
+    return acc;
+  }, new Map());
+  const newState = Array.from(positionsByField.keys())
+  .filter(f => !f.loaded)
+  .reduce((fields, fieldToLoad) => {
+    return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.game.map.seed));
+  }, state.fields);
+  return Object.assign({}, state, {
+    fields: newState.map((field, _fieldIndex, fields) => {
+      if (positionsByField.has(field)) {
+        return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
+          positions: positionsByField.get(field),
+          loaded: true
+        }));
+      }
+      return field;
+    })
+  });
+}
+
+function init(state){
+  const { info: { game: { map: { seed } } } } = state;
+
+  const fields = nineSquare
     .reduce((fields, position) => {
       return fields.concat(
         createNewNeighbors(fields, { position }, seed)
       );
     }, [])
     .map((field, _i, fields) => ensureFieldWithNeighbors(field, fields));
+  return Object.assign({}, state, { fields });
 }
 
 export default function fields(_state, action){
-  const state = (_state && _state.fields) ? _state : Object.assign({}, _state, { fields: init(_state.info.map.seed) });
-
-  function delegateActionToIndividualFields(state, action){
-    const { info: { map: { seed } } } = state;
-    if (seed !== action.seed) return state;
-    const positionsByField = action.positions.reduce((acc, position) => {
-      const fx = Math.floor(position.x / fieldSize);
-      const fy = Math.floor(position.y / fieldSize);
-      const field = state.fields.find(field => field.position.x === fx && field.position.y === fy);
-      if (!acc.has(field)) acc.set(field, []);
-      const positions = acc.get(field);
-      positions.push({ x: position.x - fx * fieldSize, y: position.y - fy * fieldSize });
-      acc.set(field, positions);
-      return acc;
-    }, new Map());
-    const newState = Array.from(positionsByField.keys())
-    .filter(f => !f.loaded)
-    .reduce((fields, fieldToLoad) => {
-      return fields.concat(createNewNeighbors(fields, fieldToLoad, state.info.map.seed));
-    }, state.fields);
-    return Object.assign({}, state, {
-      fields: newState.map((field, _fieldIndex, fields) => {
-        if (positionsByField.has(field)) {
-          return fieldReducer(ensureFieldWithNeighbors(field, fields), Object.assign({}, action, {
-            positions: positionsByField.get(field),
-            loaded: true
-          }));
-        }
-        return field;
-      })
-    });
-  }
+  const state = (_state && _state.fields) ? _state : init(_state);
 
   const r = {
-    [NEW_MAP]: ()=> {
-      const { info: { map: { seed } } } = state;
-      return Object.assign({}, state, { fields: init(seed) });
-    },
+    [NEW_GAME]: ()=> init(state),
+    [SET_MAP]: ()=> init(state),
     [REVEAL]: ()=> delegateActionToIndividualFields(state, action),
     [FLAG]: ()=> delegateActionToIndividualFields(state, action),
     [UNFLAG]: ()=> delegateActionToIndividualFields(state, action)

@@ -1,18 +1,21 @@
 /* eslint-env browser */
 import React, { PropTypes, PureComponent as Component } from 'react'; // eslint-disable-line react/no-deprecated
 import { connect } from 'react-redux';
-import { newGame, newMap } from '../actions';
+import { newGame, setMap } from '../actions';
 require('./info.css');
 
 const CurrentGamePanel = connect(
   ({ info: {
     bestHardcore: best,
-    map: { revealCount: score }
+    game: {
+      map: { revealCount: score },
+      nextMaps: [ nextMap, ..._ ]
+    }
   } }) => ({
-    score, best
+    score, best, nextMapId: nextMap.id || nextMap.seed
   }),
   (dispatch, props) => ({
-    onNewMap: () => dispatch(newMap()),
+    onSetMap(mapId){ dispatch(setMap(mapId)); },
     onChangePannel: props.onChangePannel
   })
 )(
@@ -20,20 +23,21 @@ const CurrentGamePanel = connect(
     static displayName = "CurrentGamePanel"
     static propTypes = {
       score: PropTypes.number.isRequired,
-      best: PropTypes.number,
-      onNewMap: PropTypes.func.isRequired,
+      best: PropTypes.number.isRequired,
+      nextMapId: PropTypes.string.isRequired,
+      onSetMap: PropTypes.func.isRequired,
       onChangePannel: PropTypes.func.isRequired
     }
     render(){
-      const { score, best, onNewMap, onChangePannel } = this.props;
+      const { score, best, nextMapId, onSetMap, onChangePannel } = this.props;
       return <div className='currentGame info rows'>
         <div className="cols">
-          <button onClick={onNewMap}>next map</button>
+          <button onClick={() => onSetMap(nextMapId)}>next map</button>
           <a onClick={function(){ onChangePannel('new_game'); }}>new game</a>
         </div>
         <div style={{ textAlign: 'right' }}>
           Score: {score}
-          { best && <small> best: {best}</small> }
+          <small> best: {best}</small>
         </div>
       </div>;
     }
@@ -41,10 +45,10 @@ const CurrentGamePanel = connect(
 );
 
 const NewGamePanel = connect(
-  ({ info: { map: {
-    safeStart, isPractice
-  }} }) => ({
-    safeStart, isPractice
+  ({ info: { game: {
+    kind, safeStart, isPractice
+  } } }) => ({
+    kind, safeStart, isPractice
   }),
   (dispatch, props) => ({
     onChangePanel: props.onChangePanel,

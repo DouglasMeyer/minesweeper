@@ -1,6 +1,6 @@
 /* eslint-env browser */
 /* global ga */
-import { nineSquare, cellAt, fieldSize } from './helpers';
+import { nineSquare, cellAt, fieldSize, newSeed } from './helpers';
 
 /*
  * action types
@@ -12,6 +12,7 @@ export const UNFLAG = 'UNFLAG';
 export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
 export const NEW_MAP = 'NEW_MAP';
+export const SET_MAP = 'SET_MAP';
 
 /*
  * action creators
@@ -26,11 +27,11 @@ export function reveal(...positions){
     if (revealing) return;
     requestAnimationFrame(doReveal);
     revealing = true;
-    const { info: { map: { seed } } } = getState();
+    const { info: { game: { map: { seed } } } } = getState();
 
     function doReveal(){
       revealing = false;
-      const { fields, info: { map: { exploded } } } = getState();
+      const { fields, info: { game: { map: { exploded } } } } = getState();
       if (exploded){
         positionsToReveal = [];
         return;
@@ -81,7 +82,7 @@ export function revealSafe(){
 
 export function flag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { map: { exploded } } } = getState();
+    const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
       dispatch({ type: FLAG, seed, positions: [ position ] });
     }
@@ -90,7 +91,7 @@ export function flag(seed, position){
 
 export function unflag(seed, position){
   return (dispatch, getState)=>{
-    const { info: { map: { exploded } } } = getState();
+    const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
       dispatch({ type: UNFLAG, seed, positions: [ position ] });
     }
@@ -158,22 +159,30 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-export function newGame({ isPractice, safeStart }){
-  return (dispatch, getState) => {
-    dispatch({ type: NEW_GAME, isPractice, safeStart });
-    newMap()(dispatch, getState);
+export function newGame({ kind, isPractice, safeStart }){
+  return dispatch => {
+    if (window.ga) ga('send', 'event', 'Game', 'NEW_GAME', JSON.stringify({ kind, safeStart, isPractice }));
+    let gameId, mapId, seed = newSeed();
+    dispatch({ type: NEW_GAME, kind, isPractice, safeStart });
+    if (safeStart){ dispatch(revealSafe()); }
   };
 }
 
-export function newMap(){
+export function newMap({ id, seed, exploded = false } = {}){
   return (dispatch, getState) => {
-    const { info: { map: { safeStart, isPractice } } } = getState();
+    const { info: { game: { safeStart, isPractice } } } = getState();
     if (window.ga) ga('send', 'event', 'Game', 'NEW_MAP', JSON.stringify({ safeStart, isPractice }));
+    dispatch({ type: NEW_MAP, id, seed, exploded });
+  };
+}
 
+export function setMap(mapId){ // mapId or seed
+  return (dispatch, getState) => {
+    const {
+      info: { game: safeStart }
+    } = getState();
 
-    dispatch({ type: NEW_MAP });
-    if (safeStart) {
-      revealSafe()(dispatch, getState);
-    }
+    dispatch({ type: SET_MAP, mapId });
+    if (safeStart) dispatch(revealSafe());
   };
 }
