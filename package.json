@@ -35,6 +35,7 @@
     "eslint-plugin-react": "",
     "eslint-plugin-standard": "",
     "extract-text-webpack-plugin": "",
+    "firebase": "",
     "mocha": "",
     "mocha-loader": "",
     "mocha-webpack": "",

@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global ga */
+import firebase from './firebase';
 import { nineSquare, cellAt, fieldSize, newSeed } from './helpers';
 
 /*
@@ -42,7 +43,19 @@ export function reveal(...positions){
       });
       if (positionsToReveal.length === 0) return;
       const positionsToRevealNow = positionsToReveal.splice(0, 20);
-      dispatch({ type: REVEAL, seed, positions: positionsToRevealNow });
+      if (mapRef){
+        const actionRef = mapRef.push();
+        actionRef.set({
+          action: 'reveal',
+          positions: positionsToRevealNow.reduce((acc, position) =>
+            Object.assign(acc, {
+              [actionRef.child('positions').push().key]: position
+            })
+          , {})
+        });
+      } else {
+        dispatch({ type: REVEAL, seed, positions: positionsToRevealNow });
+      }
 
       positionsToRevealNow.forEach(pos => {
         const cell = cellAt(fields, pos.x, pos.y);
@@ -84,7 +97,17 @@ export function flag(seed, position){
   return (dispatch, getState)=>{
     const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
-      dispatch({ type: FLAG, seed, positions: [ position ] });
+      if (mapRef){
+        const actionRef = mapRef.push();
+        actionRef.set({
+          action: 'flag',
+          positions: {
+            [actionRef.child('positions').push().key]: position
+          }
+        });
+      } else {
+        dispatch({ type: FLAG, seed, positions: [ position ] });
+      }
     }
   };
 }
@@ -93,7 +116,17 @@ export function unflag(seed, position){
   return (dispatch, getState)=>{
     const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
-      dispatch({ type: UNFLAG, seed, positions: [ position ] });
+      if (mapRef){
+        const actionRef = mapRef.push();
+        actionRef.set({
+          action: 'unflag',
+          positions: {
+            [actionRef.child('positions').push().key]: position
+          }
+        });
+      } else {
+        dispatch({ type: UNFLAG, seed, positions: [ position ] });
+      }
     }
   };
 }
@@ -159,25 +192,97 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
+let mapsRef;
 export function newGame({ kind, isPractice, safeStart }){
   return dispatch => {
     if (window.ga) ga('send', 'event', 'Game', 'NEW_GAME', JSON.stringify({ kind, safeStart, isPractice }));
-    let gameId, mapId, seed = newSeed();
-    dispatch({ type: NEW_GAME, kind, isPractice, safeStart });
+    let gameId;
+    if (mapsRef) {
+      mapsRef.off();
+    }
+    mapsRef = null;
+    if (kind === 'public') {
+      gameId = firebase.database().ref().child('games').push().key;
+      firebase.database().ref(`/games/${gameId}`).set({ safeStart, isPractice, maps: {} });
+      mapsRef = firebase.database().ref(`games/${gameId}/maps`);
+      mapsRef.on('child_added', data => {
+        const { seed, exploded } = data.val();
+        dispatch(newMap({ id: data.key, seed, exploded }));
+      });
+    }
+    dispatch({ type: NEW_GAME, id: gameId, kind, isPractice, safeStart });
     dispatch(nextMap());
   };
 }
 
-export function newMap({ id, seed, exploded = false } = {}){
-  return { type: NEW_MAP, id, seed, exploded };
+export function joinGame(gameId){
+  return dispatch => {
+    if (mapsRef) {
+      mapsRef.off();
+    }
+    mapsRef = null;
+    dispatch({ type: NEW_GAME, kind: 'solo', isPractice: true, safeStart: false });
+    dispatch({ type: NEW_MAP, seed: '123' });
+    dispatch({ type: SET_MAP, mapId: '123' });
+    firebase.database().ref(`games/${gameId}`).once('value', gameSnapshot => {
+      const id = gameSnapshot.key;
+      const { isPractice, safeStart } = gameSnapshot.val();
+      mapsRef = firebase.database().ref(`games/${gameId}/maps`);
+      mapsRef.on('value', mapsData => {
+        dispatch({ type: NEW_GAME, id, kind: 'public', isPractice, safeStart });
+        let mapId;
+        mapsData.forEach(mapData => {
+          mapId = mapData.key;
+          const { seed, exploded } = mapData.val();
+          dispatch(newMap({ id: mapId, seed, exploded }));
+        });
+        dispatch(setMap(mapId));
+      });
+      mapsRef.on('child_added', data => {
+        const id = data.key;
+        const { seed, exploded } = data.val();
+        dispatch(newMap({ id, seed, exploded }));
+      });
+    });
+  };
 }
 
+export function newMap({ id, seed=newSeed(), exploded = false } = {}){
+  return (dispatch, getState) => {
+    const { info: { game: { id: gameId } } } = getState();
+    let mapId;
+    if (!id && gameId) {
+      mapId = mapsRef.push().key;
+      mapsRef.child(mapId).set({ seed, exploded });
+    } else {
+      dispatch({ type: NEW_MAP, id: id || mapId, seed, exploded });
+    }
+  };
+}
+
+let mapRef;
 export function setMap(mapId){ // mapId or seed
   return (dispatch, getState) => {
     const {
-      info: { game: { safeStart, isPractice } }
+      info: { game: { id: gameId, safeStart, isPractice } }
     } = getState();
     if (window.ga) ga('send', 'event', 'Game', 'SET_MAP', JSON.stringify({ safeStart, isPractice }));
+
+    if (mapRef) mapRef.off();
+    mapRef = null;
+    if (gameId) {
+      mapRef = firebase.database().ref(`mapActions/${mapId}`);
+      mapRef.on('child_added', data => {
+        const { info: { game: { map: { seed } } } } = getState();
+        const { action, positions } = data.val();
+        const type = {
+          'reveal': REVEAL,
+          'flag': FLAG,
+          'unflag': UNFLAG
+        }[action];
+        dispatch({ type, seed, positions: Object.keys(positions).map(k => positions[k]) });
+      });
+    }
 
     dispatch({ type: SET_MAP, mapId });
     if (safeStart) dispatch(revealSafe());

@@ -56,6 +56,7 @@ const NewGamePanel = connect(
   class extends Component {
     static displayName = "NewGamePanel"
     static propTypes = {
+      kind: PropTypes.oneOf(['solo', 'public']).isRequired,
       safeStart: PropTypes.bool,
       isPractice: PropTypes.bool,
       onNewGame: PropTypes.func.isRequired,
@@ -64,22 +65,27 @@ const NewGamePanel = connect(
     constructor(props){
       super(props);
       this.state = {
+        kind: props.kind,
         safeStart: props.safeStart, isPractice: props.isPractice
       };
     }
 
     onNewGame = () => {
       const { onNewGame, onChangePannel } = this.props;
-      const { isPractice, safeStart } = this.state;
-      onNewGame({ isPractice, safeStart });
+      const { kind, isPractice, safeStart } = this.state;
+      onNewGame({ kind, isPractice, safeStart });
       onChangePannel('current_game');
     }
 
     render(){
       const { onChangePannel } = this.props;
-      const { safeStart, isPractice } = this.state;
+      const { kind, safeStart, isPractice } = this.state;
 
       return <div className='info rows'>
+        <div className="cols">
+          <label><input type="radio" name="kind" checked={kind === 'solo'} onChange={() => this.setState({ kind: 'solo' })} />solo</label>
+          <label><input type="radio" name="kind" checked={kind === 'public'} onChange={() => this.setState({ kind: 'public' })} />public</label>
+        </div>
         <div className="cols">
           <label><input type="radio" name="is_practice" checked={!isPractice} onChange={() => this.setState({ isPractice: false })} />normal</label>
           <label><input type="radio" name="is_practice" checked={isPractice} onChange={() => this.setState({ isPractice: true })} />practice</label>

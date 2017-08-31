@@ -2,9 +2,9 @@
 import { REVEAL, NEW_GAME, NEW_MAP, SET_MAP } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
-function newGame({ kind, isPractice, safeStart }){
+function newGame({ kind, id, isPractice, safeStart }){
   return {
-    kind, isPractice, safeStart,
+    kind, id, isPractice, safeStart,
     previousMaps: [],
     nextMaps: []
   };
@@ -17,9 +17,9 @@ function newMap({ id, seed=newSeed(), exploded=false }={}){
 export default function info(_state, action){
   const state = (_state && _state.info) ? _state : Object.assign({}, _state, { info: { bestHardcore: 0 } });
   const r = {
-    [NEW_GAME]: (state, { kind, isPractice, safeStart }) => Object.assign({}, state, {
+    [NEW_GAME]: (state, { kind, id, isPractice, safeStart }) => Object.assign({}, state, {
       info: Object.assign({}, state.info, {
-        game: newGame({ kind, isPractice, safeStart })
+        game: newGame({ kind, id, isPractice, safeStart })
       })
     }),
     [NEW_MAP]: (state, { id, seed, exploded }) => Object.assign({}, state, {

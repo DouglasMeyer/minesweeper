@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import * as actions from './actions';
+import firebase from './firebase';
 export { actions };
 
 import reducers from './reducers'; // eslint-disable-line import/first
@@ -24,10 +25,13 @@ try {
         bestHardcore: initialState.info.bestHardcore,
         gameId: initialState.info.gameId,
         game: {
+          id: initialState.info.game.id,
+          kind: initialState.info.game.kind,
           isPractice: initialState.info.game.isPractice,
           safeStart: initialState.info.game.safeStart,
           previousMaps: initialState.info.game.previousMaps, // id, seed, exploded, revealCount
           map: {
+            id: initialState.info.map.id,
             seed: initialState.info.map.seed,
             exploded: initialState.info.map.exploded,
             revealCount: initialState.info.map.revealCount
@@ -59,6 +63,9 @@ store.subscribe(function(){
 
 const { info: { game } } = store.getState();
 if (!game) store.dispatch(actions.newGame({ kind: 'solo', isPractice: false, safeStart: true }));
+else if (game.id) store.dispatch(actions.joinGame(game.id));
+
+firebase.auth().signInAnonymously()
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){
