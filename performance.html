@@ -1,0 +1,72 @@
+<html>
+  <head>
+    <title>Minesweeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="index.css">
+    <style>
+      * { box-sizing: border-box; }
+      html, body, #container, .app {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none;   /* Chrome/Safari/Opera */
+        -khtml-user-select: none;    /* Konqueror */
+        -moz-user-select: none;      /* Firefox */
+        -ms-user-select: none;       /* Internet Explorer/Edge */
+        user-select: none;           /* Non-prefixed version, currently
+                                        not supported by any browser */
+      }
+      @-ms-viewport{
+        width: device-width;
+      }
+
+      h1, h2, h3, h4, h5 { margin-top: 0; margin-bottom: 0.5ex; }
+
+      .app {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script src="polyfill.min.js" charset="UTF-8"></script>
+    <script src="app.js" charset="UTF-8"></script>
+    <script src="lib/peer_web.js" charset="UTF-8"></script>
+
+    <script>
+      /* eslint-disable no-console */
+      /* globals Minesweeper */
+      window.ga = function(){};
+
+      if (window.name !== 'performanceTest') {
+        window.open('/performance.html', 'performanceTest', 'width=800,height=600');
+      } else {
+        const seed = "Performance test";
+        const { store, actions } = Minesweeper;
+        const { dispatch } = store;
+        console.profile("Performance test");
+        function endProfile(){
+          console.profileEnd("Performance test");
+          unsubscribe();
+        }
+        let timeout;
+        const unsubscribe = store.subscribe(function(){
+          clearTimeout(timeout);
+          timeout = setTimeout(endProfile, 1000);
+        });
+        dispatch(actions.newGame({ currentGame: {
+          gameMode: 'normal',
+          safeStart: true,
+          reveals: {},
+          seed: seed
+        } }));
+        dispatch(actions.revealSafe());
+      }
+    </script>
+  </body>
+</html>
