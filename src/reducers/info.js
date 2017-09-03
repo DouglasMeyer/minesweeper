@@ -22,16 +22,22 @@ export default function info(_state, action){
         game: newGame({ kind, id, isPractice, safeStart })
       })
     }),
-    [NEW_MAP]: (state, { id, seed, exploded }) => Object.assign({}, state, {
-      info: Object.assign({}, state.info, {
-        game: Object.assign({}, state.info.game, {
-          nextMaps: [
-            ...state.info.game.nextMaps,
-            newMap({ id, seed, exploded })
-          ]
+    [NEW_MAP]: (state, { id, seed, exploded }) => {
+      const { info: { game: { previousMaps, map, nextMaps } } } = state;
+      const gameIds = [...previousMaps, map, ...nextMaps].filter(x => x).map(({ id }) => id);
+      if (gameIds.indexOf(id) !== -1) return state;
+
+      return Object.assign({}, state, {
+        info: Object.assign({}, state.info, {
+          game: Object.assign({}, state.info.game, {
+            nextMaps: [
+              ...state.info.game.nextMaps,
+              newMap({ id, seed, exploded })
+            ]
+          })
         })
-      })
-    }),
+      });
+    },
     [SET_MAP]: (state, { mapId }) => {
       const { info: { game: { previousMaps: oldPreviousMaps, map, nextMaps: oldNextMaps } } } = state;
       const maps = [ ...oldPreviousMaps, map, ...oldNextMaps ].filter(x => x);

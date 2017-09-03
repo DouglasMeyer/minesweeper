@@ -221,6 +221,7 @@ export function joinGame(gameId){
       mapsRef.off();
     }
     mapsRef = null;
+    // Temporary game while we join the game
     dispatch({ type: NEW_GAME, kind: 'solo', isPractice: true, safeStart: false });
     dispatch({ type: NEW_MAP, seed: '123' });
     dispatch({ type: SET_MAP, mapId: '123' });
@@ -237,11 +238,12 @@ export function joinGame(gameId){
           dispatch(newMap({ id: mapId, seed, exploded }));
         });
         dispatch(setMap(mapId));
-      });
-      mapsRef.on('child_added', data => {
-        const id = data.key;
-        const { seed, exploded } = data.val();
-        dispatch(newMap({ id, seed, exploded }));
+
+        mapsRef.on('child_added', data => {
+          const id = data.key;
+          const { seed, exploded } = data.val();
+          dispatch(newMap({ id, seed, exploded }));
+        });
       });
     });
   };
@@ -251,12 +253,11 @@ export function newMap({ id, seed=newSeed(), exploded = false } = {}){
   return (dispatch, getState) => {
     const { info: { game: { id: gameId } } } = getState();
     let mapId;
-    if (!id && gameId) {
+    if (gameId && !id) {
       mapId = mapsRef.push().key;
       mapsRef.child(mapId).set({ seed, exploded });
-    } else {
-      dispatch({ type: NEW_MAP, id: id || mapId, seed, exploded });
     }
+    dispatch({ type: NEW_MAP, id: id || mapId, seed, exploded });
   };
 }
 
@@ -301,7 +302,7 @@ export function nextMap({ createMap = true }={}){
     if (!map && createMap) {
       dispatch(newMap());
       dispatch(nextMap({ createMap: false }));
-    } else {
+    } else if (map) {
       dispatch(setMap( map.id || map.seed ));
     }
   };

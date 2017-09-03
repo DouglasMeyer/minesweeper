@@ -1,17 +1,19 @@
 /* eslint-env browser */
 import React, { PropTypes, PureComponent as Component } from 'react'; // eslint-disable-line react/no-deprecated
 import { connect } from 'react-redux';
-import { newGame, nextMap } from '../actions';
+import { newGame, nextMap, joinGame } from '../actions';
+import firebase from '../firebase';
 require('./info.css');
 
 const CurrentGamePanel = connect(
   ({ info: {
     bestHardcore: best,
     game: {
+      id,
       map: { revealCount: score },
     }
   } }) => ({
-    score, best
+    score, best, gameId: id
   }),
   (dispatch, props) => ({
     onNextMap(){ dispatch(nextMap()); },
@@ -23,17 +25,28 @@ const CurrentGamePanel = connect(
     static propTypes = {
       score: PropTypes.number.isRequired,
       best: PropTypes.number.isRequired,
+      gameId: PropTypes.string,
       onNextMap: PropTypes.func.isRequired,
       onChangePannel: PropTypes.func.isRequired
     }
     render(){
-      const { score, best, onNextMap, onChangePannel } = this.props;
+      const { score, best, gameId, onNextMap, onChangePannel } = this.props;
       return <div className='currentGame info rows'>
         <div className="cols">
           <button onClick={() => onNextMap()}>next map</button>
           <a onClick={function(){ onChangePannel('new_game'); }}>new game</a>
+          <a onClick={function(){ onChangePannel('join_game'); }}>join game</a>
         </div>
-        <div style={{ textAlign: 'right' }}>
+        { gameId &&
+          <a
+            href={`${location.origin}${location.pathname}#joinGame=${gameId}`}
+            onClick={function(e){
+              e.preventDefault();
+              alert("Right-click to copy link/address.");
+            }}
+          >Share game link</a>
+        }
+        <div style={{ marginTop: '5px', textAlign: 'right' }}>
           Score: {score}
           <small> best: {best}</small>
         </div>
@@ -102,6 +115,68 @@ const NewGamePanel = connect(
   }
 );
 
+const JoinGamePanel = connect(
+  () => ({}),
+  (dispatch, props) => ({
+    onChangePanel: props.onChangePanel,
+    onJoinGame: opts => dispatch(joinGame(opts))
+  })
+)(
+  class extends Component {
+    static displayName = "JoinGamePanel"
+    static propTypes = {
+      onJoinGame: PropTypes.func.isRequired,
+      onChangePannel: PropTypes.func.isRequired
+    }
+    componentDidMount(){
+      this.gamesRef = firebase.database().ref().child('games');
+      this.gamesRef.on('value', snapshot => {
+        const games = snapshot.val();
+        this.setState({ games });
+      });
+    }
+    componentWillUnmount(){
+      this.gamesRef.off();
+    }
+
+    onJoinGame = gameId => {
+      const { onJoinGame, onChangePannel } = this.props;
+      onJoinGame(gameId);
+      onChangePannel('current_game');
+    }
+
+    render(){
+      const { onChangePannel } = this.props;
+      const { games } = this.state;
+
+      return <div className='info rows'>
+        { games
+          ? <div>
+              { Object.keys(games).map(gameId => {
+                const game = games[gameId];
+                return <div key={gameId} className="cols">
+                  <div>
+                    Map count: {Object.keys(game.maps).length}
+                    {' '}
+                    {[
+                      game.isPractice && 'practice',
+                      game.safeStart && 'safe start'
+                    ].filter(x => x).join(' ')}
+                  </div>
+                  <button onClick={() => this.onJoinGame(gameId)}>join game</button>
+                </div>;
+              }) }
+            </div>
+          : <div>Loading games</div>
+        }
+        <div className="cols">
+          <a onClick={() => onChangePannel('current_game')}>cancel</a>
+        </div>
+      </div>;
+    }
+  }
+);
+
 export default class Info extends Component {
   state = { currentPanel: 'current_game' }
 
@@ -116,6 +191,11 @@ export default class Info extends Component {
       }
       { currentPanel === 'new_game' &&
         <NewGamePanel
+          onChangePannel={currentPanel => { this.setState({ currentPanel }); }}
+        />
+      }
+      { currentPanel === 'join_game' &&
+        <JoinGamePanel
           onChangePannel={currentPanel => { this.setState({ currentPanel }); }}
         />
       }

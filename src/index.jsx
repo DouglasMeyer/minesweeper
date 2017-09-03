@@ -61,11 +61,20 @@ store.subscribe(function(){
   }, 500);
 });
 
+function hashChange(){
+  const joinMatch = location.hash.match(/joinGame=([^&]*)/);
+  const joinGame = joinMatch && joinMatch[1];
+  if (joinGame) store.dispatch(actions.joinGame(joinGame));
+  location.hash = "";
+}
+addEventListener("hashchange", hashChange, false);
+hashChange();
+
 const { info: { game } } = store.getState();
 if (!game) store.dispatch(actions.newGame({ kind: 'solo', isPractice: false, safeStart: true }));
 else if (game.id) store.dispatch(actions.joinGame(game.id));
 
-firebase.auth().signInAnonymously()
+firebase.auth().signInAnonymously();
 
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){

@@ -24,6 +24,9 @@
   top: calc(2rem - 1px);
   transform: translateY(-100%);
 }
+.info.currentGame a {
+  color: inherit;
+}
 .info.currentGame:hover, .app-is_game_over .info.currentGame {
   transform: translateY(-2.7rem); /* -top - 0.7 */
 }
