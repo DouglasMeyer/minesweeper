@@ -202,18 +202,27 @@ export function newGame({ kind, isPractice, safeStart }){
     }
     mapsRef = null;
     if (kind === 'public') {
-      gameId = firebase.database().ref().child('games').push().key;
-      firebase.database().ref(`/games/${gameId}`).set({ safeStart, isPractice, maps: {} });
+      gameId = firebase.database().ref('games').push().key;
+      firebase.database().ref(`/games/${gameId}`).set({ safeStart, isPractice });
       mapsRef = firebase.database().ref(`games/${gameId}/maps`);
       mapsRef.on('child_added', data => {
+        const id = data.key;
         const { seed, exploded } = data.val();
-        dispatch(newMap({ id: data.key, seed, exploded }));
+        dispatch(newMap({ id, seed, exploded }));
+      });
+      uidPromise.then(({ uid }) => {
+        const playerRef = firebase.database().ref(`/games/${gameId}/players/${uid}`);
+        playerRef.set('Player 1');
       });
     }
     dispatch({ type: NEW_GAME, id: gameId, kind, isPractice, safeStart });
     dispatch(nextMap());
   };
 }
+
+const uidPromise = new Promise((resolve, reject) => {
+  firebase.auth().signInAnonymously().then(resolve, reject);
+});
 
 export function joinGame(gameId){
   return dispatch => {
@@ -225,11 +234,21 @@ export function joinGame(gameId){
     dispatch({ type: NEW_GAME, kind: 'solo', isPractice: true, safeStart: false });
     dispatch({ type: NEW_MAP, seed: '123' });
     dispatch({ type: SET_MAP, mapId: '123' });
-    firebase.database().ref(`games/${gameId}`).once('value', gameSnapshot => {
-      const id = gameSnapshot.key;
-      const { isPractice, safeStart } = gameSnapshot.val();
-      mapsRef = firebase.database().ref(`games/${gameId}/maps`);
-      mapsRef.on('value', mapsData => {
+    mapsRef = firebase.database().ref(`games/${gameId}/maps`);
+    Promise.all([
+      uidPromise,
+      new Promise(resolve => {
+        firebase.database().ref(`games/${gameId}`).once('value', gameSnapshot => {
+          const id = gameSnapshot.key;
+          const { isPractice, safeStart, players } = gameSnapshot.val();
+          resolve({ id, isPractice, safeStart, players });
+        });
+      })
+    ]).then(([ { uid }, { id, isPractice, safeStart, players } ]) => {
+      const playerCount = Object.keys(players || {}).length;
+      const playerRef = firebase.database().ref(`games/${gameId}/players/${uid}`);
+      playerRef.set(`Player ${playerCount+1}`);
+      mapsRef.once('value', mapsData => {
         dispatch({ type: NEW_GAME, id, kind: 'public', isPractice, safeStart });
         let mapId;
         mapsData.forEach(mapData => {

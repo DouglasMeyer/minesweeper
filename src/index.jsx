@@ -74,8 +74,6 @@ const { info: { game } } = store.getState();
 if (!game) store.dispatch(actions.newGame({ kind: 'solo', isPractice: false, safeStart: true }));
 else if (game.id) store.dispatch(actions.joinGame(game.id));
 
-firebase.auth().signInAnonymously();
-
 if (!window.requestAnimationFrame){
   window.requestAnimationFrame = function(cb){
     setTimeout(function(){

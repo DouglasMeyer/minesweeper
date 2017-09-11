@@ -70,8 +70,8 @@ const NewGamePanel = connect(
     static displayName = "NewGamePanel"
     static propTypes = {
       kind: PropTypes.oneOf(['solo', 'public']).isRequired,
-      safeStart: PropTypes.bool,
-      isPractice: PropTypes.bool,
+      safeStart: PropTypes.bool.isRequired,
+      isPractice: PropTypes.bool.isRequired,
       onNewGame: PropTypes.func.isRequired,
       onChangePannel: PropTypes.func.isRequired
     }
@@ -150,13 +150,16 @@ const JoinGamePanel = connect(
       const { games } = this.state;
 
       return <div className='info rows'>
-        { games
-          ? <div>
-              { Object.keys(games).map(gameId => {
+        { games === undefined
+          ? <div>Loading games</div>
+          : games === null
+          ? <div>No games</div>
+          : <div>
+              { Object.keys(games || {}).map(gameId => {
                 const game = games[gameId];
                 return <div key={gameId} className="cols">
                   <div>
-                    Map count: {Object.keys(game.maps).length}
+                    Map count: {Object.keys(game.maps || {}).length}
                     {' '}
                     {[
                       game.isPractice && 'practice',
@@ -167,7 +170,6 @@ const JoinGamePanel = connect(
                 </div>;
               }) }
             </div>
-          : <div>Loading games</div>
         }
         <div className="cols">
           <a onClick={() => onChangePannel('current_game')}>cancel</a>
