@@ -14,10 +14,15 @@ export const MOVE = 'MOVE';
 export const NEW_GAME = 'NEW_GAME';
 export const NEW_MAP = 'NEW_MAP';
 export const SET_MAP = 'SET_MAP';
+export const SET_PLAYER_ID = 'SET_PLAYER_ID';
 
 /*
  * action creators
  */
+
+const uidPromise = new Promise((resolve, reject) => {
+  firebase.auth().signInAnonymously().then(resolve, reject);
+});
 
 let positionsToReveal = [];
 let revealing = false;
@@ -44,7 +49,24 @@ export function reveal(...positions){
       if (positionsToReveal.length === 0) return;
       const positionsToRevealNow = positionsToReveal.splice(0, 20);
       if (mapRef){
-        const actionRef = mapRef.push();
+        const totalRef = gameRef.child(`maps/${mapRef.key}/reveals`);
+        let countRef;
+        const revealCount = positionsToRevealNow.length;
+        uidPromise.then(({ uid }) => {
+          countRef = mapRef.child(`reveals/${uid}`);
+          return Promise.all([
+            new Promise(resolve => {
+              totalRef.once('value', snapshot => { resolve(snapshot.val()); });
+            }),
+            new Promise(resolve => {
+              countRef.once('value', snapshot => { resolve(snapshot.val()); });
+            })
+          ]);
+        }).then(([ total, count ]) => {
+          totalRef.set(total + revealCount);
+          countRef.set(count + revealCount);
+        });
+        const actionRef = mapRef.child('actions').push();
         actionRef.set({
           action: 'reveal',
           positions: positionsToRevealNow.reduce((acc, position) =>
@@ -98,7 +120,7 @@ export function flag(seed, position){
     const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
       if (mapRef){
-        const actionRef = mapRef.push();
+        const actionRef = mapRef.child('actions').push();
         actionRef.set({
           action: 'flag',
           positions: {
@@ -117,7 +139,7 @@ export function unflag(seed, position){
     const { info: { game: { map: { exploded } } } } = getState();
     if (!exploded){
       if (mapRef){
-        const actionRef = mapRef.push();
+        const actionRef = mapRef.child('actions').push();
         actionRef.set({
           action: 'unflag',
           positions: {
@@ -192,26 +214,26 @@ export function scroll({ dx, dy }){
   return { type: MOVE, dx, dy };
 }
 
-let mapsRef;
+let gameRef;
 export function newGame({ kind, isPractice, safeStart }){
   return dispatch => {
     if (window.ga) ga('send', 'event', 'Game', 'NEW_GAME', JSON.stringify({ kind, safeStart, isPractice }));
     let gameId;
-    if (mapsRef) {
-      mapsRef.off();
+    if (gameRef) {
+      gameRef.child('maps').off();
     }
-    mapsRef = null;
+    gameRef = null;
     if (kind === 'public') {
-      gameId = firebase.database().ref('games').push().key;
-      firebase.database().ref(`/games/${gameId}`).set({ safeStart, isPractice });
-      mapsRef = firebase.database().ref(`games/${gameId}/maps`);
-      mapsRef.on('child_added', data => {
+      gameRef = firebase.database().ref('games').push();
+      gameId = gameRef.key;
+      gameRef.set({ safeStart, isPractice });
+      gameRef.child('maps').on('child_added', data => {
         const id = data.key;
         const { seed, exploded } = data.val();
         dispatch(newMap({ id, seed, exploded }));
       });
       uidPromise.then(({ uid }) => {
-        const playerRef = firebase.database().ref(`/games/${gameId}/players/${uid}`);
+        const playerRef = gameRef.child(`players/${uid}`);
         playerRef.set('Player 1');
       });
     }
@@ -220,35 +242,34 @@ export function newGame({ kind, isPractice, safeStart }){
   };
 }
 
-const uidPromise = new Promise((resolve, reject) => {
-  firebase.auth().signInAnonymously().then(resolve, reject);
-});
-
 export function joinGame(gameId){
   return dispatch => {
-    if (mapsRef) {
-      mapsRef.off();
+    if (gameRef) {
+      gameRef.child('maps').off();
     }
-    mapsRef = null;
+    gameRef = null;
     // Temporary game while we join the game
     dispatch({ type: NEW_GAME, kind: 'solo', isPractice: true, safeStart: false });
     dispatch({ type: NEW_MAP, seed: '123' });
     dispatch({ type: SET_MAP, mapId: '123' });
-    mapsRef = firebase.database().ref(`games/${gameId}/maps`);
-    Promise.all([
-      uidPromise,
+    gameRef = firebase.database().ref(`games/${gameId}`);
+    uidPromise.then(({ uid }) =>
       new Promise(resolve => {
-        firebase.database().ref(`games/${gameId}`).once('value', gameSnapshot => {
+        gameRef.once('value', gameSnapshot => {
           const id = gameSnapshot.key;
+          console.log('gameSnapshot', gameSnapshot.val());
           const { isPractice, safeStart, players } = gameSnapshot.val();
-          resolve({ id, isPractice, safeStart, players });
+          resolve({ uid, id, isPractice, safeStart, players });
         });
       })
-    ]).then(([ { uid }, { id, isPractice, safeStart, players } ]) => {
-      const playerCount = Object.keys(players || {}).length;
-      const playerRef = firebase.database().ref(`games/${gameId}/players/${uid}`);
-      playerRef.set(`Player ${playerCount+1}`);
-      mapsRef.once('value', mapsData => {
+    )
+    .then(({ uid, id, isPractice, safeStart, players }) => {
+      if (!players[uid]) {
+        const playerCount = Object.keys(players || {}).length;
+        const playerRef = gameRef.child(`players/${uid}`);
+        playerRef.set(`Player ${playerCount+1}`);
+      }
+      gameRef.child('maps').once('value', mapsData => {
         dispatch({ type: NEW_GAME, id, kind: 'public', isPractice, safeStart });
         let mapId;
         mapsData.forEach(mapData => {
@@ -258,7 +279,7 @@ export function joinGame(gameId){
         });
         dispatch(setMap(mapId));
 
-        mapsRef.on('child_added', data => {
+        gameRef.child('maps').on('child_added', data => {
           const id = data.key;
           const { seed, exploded } = data.val();
           dispatch(newMap({ id, seed, exploded }));
@@ -273,8 +294,9 @@ export function newMap({ id, seed=newSeed(), exploded = false } = {}){
     const { info: { game: { id: gameId } } } = getState();
     let mapId;
     if (gameId && !id) {
-      mapId = mapsRef.push().key;
-      mapsRef.child(mapId).set({ seed, exploded });
+      const newMapRef = gameRef.child('maps').push();
+      mapId = newMapRef.key;
+      newMapRef.set({ seed, exploded });
     }
     dispatch({ type: NEW_MAP, id: id || mapId, seed, exploded });
   };
@@ -288,19 +310,28 @@ export function setMap(mapId){ // mapId or seed
     } = getState();
     if (window.ga) ga('send', 'event', 'Game', 'SET_MAP', JSON.stringify({ safeStart, isPractice }));
 
-    if (mapRef) mapRef.off();
+    if (mapRef) {
+      mapRef.child('actions').off();
+    }
     mapRef = null;
     if (gameId) {
-      mapRef = firebase.database().ref(`mapActions/${mapId}`);
-      mapRef.on('child_added', data => {
-        const { info: { game: { map: { seed } } } } = getState();
-        const { action, positions } = data.val();
+      mapRef = firebase.database().ref(`map/${mapId}`);
+      mapRef.child('actions').on('child_added', data => {
+        const { fields, info: { game: { map: { seed } } } } = getState();
+        const { action, positions: keyedPositions } = data.val();
         const type = {
           'reveal': REVEAL,
           'flag': FLAG,
           'unflag': UNFLAG
         }[action];
-        dispatch({ type, seed, positions: Object.keys(positions).map(k => positions[k]) });
+        const positions = Object.keys(keyedPositions).map(k => keyedPositions[k])
+          .filter(position => {
+            const cell = cellAt(fields, position.x, position.y);
+            return action === 'reveal' && !cell.revealed ||
+              action === 'flag' && (!cell.revealed && !cell.flagged) ||
+              action === 'unflag' && (!cell.revealed && cell.flagged);
+          });
+        if (positions.length) dispatch({ type, seed, positions });
       });
     }
 
@@ -325,4 +356,8 @@ export function nextMap({ createMap = true }={}){
       dispatch(setMap( map.id || map.seed ));
     }
   };
+}
+
+export function setPlayerId(playerId){
+  return { type: SET_PLAYER_ID, playerId };
 }

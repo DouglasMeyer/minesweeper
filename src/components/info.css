@@ -27,6 +27,19 @@
 .info.currentGame a {
   color: inherit;
 }
+.info.currentGame table {
+  color: inherit;
+}
+.info.currentGame input[type="text"] {
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  border: 1px solid lightgray;
+}
+.info.currentGame input[type="text"]::placeholder {
+  color: inherit;
+  opacity: 0.6;
+}
 .info.currentGame:hover, .app-is_game_over .info.currentGame {
   transform: translateY(-2.7rem); /* -top - 0.7 */
 }

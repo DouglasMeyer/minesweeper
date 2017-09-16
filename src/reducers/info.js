@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { REVEAL, NEW_GAME, NEW_MAP, SET_MAP } from '../actions';
+import { REVEAL, NEW_GAME, NEW_MAP, SET_MAP, SET_PLAYER_ID } from '../actions';
 import { cellAt, newSeed } from '../helpers';
 
 function newGame({ kind, id, isPractice, safeStart }){
@@ -85,7 +85,10 @@ export default function info(_state, action){
         });
       }, state.info);
       return Object.assign({}, state, { info: newInfo });
-    }
+    },
+    [SET_PLAYER_ID]: (state, { playerId }) => Object.assign({}, state, {
+      info: Object.assign({}, state.info, { playerId })
+    })
   }[action.type];
   return r ? r(state, action) : state;
 }

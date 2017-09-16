@@ -8,12 +8,13 @@ require('./info.css');
 const CurrentGamePanel = connect(
   ({ info: {
     bestHardcore: best,
+    playerId,
     game: {
-      id,
-      map: { revealCount: score },
+      id: gameId,
+      map: { id: mapId, revealCount: score },
     }
   } }) => ({
-    score, best, gameId: id
+    score, best, gameId, mapId, playerId
   }),
   (dispatch, props) => ({
     onNextMap(){ dispatch(nextMap()); },
@@ -26,11 +27,68 @@ const CurrentGamePanel = connect(
       score: PropTypes.number.isRequired,
       best: PropTypes.number.isRequired,
       gameId: PropTypes.string,
+      mapId: PropTypes.string,
+      playerId: PropTypes.string,
       onNextMap: PropTypes.func.isRequired,
       onChangePannel: PropTypes.func.isRequired
     }
+    constructor(props){
+      super(props);
+      this.watchPlayers(props.gameId);
+      this.watchReveals(props.mapId);
+    }
+    componentWillReceiveProps({ gameId: nextGameId, mapId: nextMapId }){
+      const { gameId, mapId } = this.props;
+      if (nextGameId !== gameId) {
+        this.unwatchPlayers();
+        this.watchPlayers(nextGameId);
+      }
+      if (nextMapId !== mapId) {
+        this.unwatchReveals();
+        this.watchReveals(nextMapId);
+      }
+    }
+    componentWillUnmount(){
+      this.unwatchPlayers();
+      this.unwatchReveals();
+    }
+    watchPlayers(gameId){
+      if (gameId){
+        this.playersRef = firebase.database().ref(`games/${gameId}/players`);
+        this.playersRef.on('value', snapshot => {
+          const players = snapshot.val();
+          this.setState({ players });
+        });
+      }
+    }
+    unwatchPlayers(){
+      if (this.playersRef) {
+        this.playersRef.off();
+        this.playersRef = null;
+      }
+    }
+    watchReveals(mapId){
+      if (mapId){
+        this.revealsRef = firebase.database().ref(`map/${mapId}/reveals`);
+        this.revealsRef.on('value', snapshot => {
+          const reveals = snapshot.val();
+          this.setState({ reveals });
+        });
+      }
+    }
+    unwatchReveals(){
+      if (this.revealsRef) {
+        this.revealsRef.off();
+        this.revealsRef = null;
+      }
+    }
+    handleChangeName = ({ target: { value }}) => {
+      const { playerId } = this.props;
+      this.playersRef.child(playerId).set(value);
+    }
     render(){
-      const { score, best, gameId, onNextMap, onChangePannel } = this.props;
+      const { score, best, gameId, playerId, onNextMap, onChangePannel } = this.props;
+      const { players = {}, reveals = {} } = this.state;
       return <div className='currentGame info rows'>
         <div className="cols">
           <button onClick={() => onNextMap()}>next map</button>
@@ -45,6 +103,24 @@ const CurrentGamePanel = connect(
               alert("Right-click to copy link/address.");
             }}
           >Share game link</a>
+        }
+        { gameId &&
+          <table>
+            { Object.keys(reveals)
+              .sort((a,b) => reveals[b] - reveals[a])
+              .map(id =>
+                <tr key={id}>
+                  <td>{reveals[id]}</td>
+                  <td>
+                    { id === playerId
+                      ? <input value={players[id]} placeholder="Your Name" type="text" onChange={this.handleChangeName} />
+                      : players[id]
+                    }
+                  </td>
+                </tr>
+              )
+            }
+          </table>
         }
         <div style={{ marginTop: '5px', textAlign: 'right' }}>
           Score: {score}
@@ -129,7 +205,7 @@ const JoinGamePanel = connect(
       onChangePannel: PropTypes.func.isRequired
     }
     componentDidMount(){
-      this.gamesRef = firebase.database().ref().child('games');
+      this.gamesRef = firebase.database().ref('games');
       this.gamesRef.on('value', snapshot => {
         const games = snapshot.val();
         this.setState({ games });
