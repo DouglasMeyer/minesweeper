@@ -1,11 +1,11 @@
 import * as firebase from 'firebase';
 firebase.initializeApp({
-  apiKey: "AIzaSyDTrmeG8GW6Z-Stkzfd4RGi4P-2T4G69fI",
-  authDomain: "minesweeper-3d1c3.firebaseapp.com",
-  databaseURL: "https://minesweeper-3d1c3.firebaseio.com",
-  projectId: "minesweeper-3d1c3",
-  storageBucket: "minesweeper-3d1c3.appspot.com",
-  messagingSenderId: "980480608421"
+  apiKey: "AIzaSyBqZkHy1xjUFqnOCjXTjlbuZxlgEk9_YNs",
+  authDomain: "minesweeper-b345e.firebaseapp.com",
+  databaseURL: "https://minesweeper-b345e.firebaseio.com",
+  projectId: "minesweeper-b345e",
+  storageBucket: "minesweeper-b345e.appspot.com",
+  messagingSenderId: "377480008829"
 });
 
 export default firebase;
